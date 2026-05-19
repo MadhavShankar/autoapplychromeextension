@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WisOwl Auto-Apply</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Views rendered dynamically by popup.ts -->
+    <div id="view-auth" class="view hidden">
+      <div class="brand">
+        <div class="brand-name">WisOwl</div>
+        <div class="brand-sub">Auto-Apply</div>
+      </div>
+      <p class="hint">Connect your WisOwl account to get started.</p>
+      <button id="btn-connect" class="btn btn-primary">Connect to WisOwl</button>
+    </div>
+
+    <div id="view-ready" class="view hidden">
+      <div class="brand">
+        <div class="brand-name">WisOwl</div>
+        <div class="brand-sub">Ready to apply</div>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value" id="ready-total">0</div>
+          <div class="stat-label">Jobs today</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="ready-high">0</div>
+          <div class="stat-label">High match</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="ready-medium">0</div>
+          <div class="stat-label">Medium</div>
+        </div>
+      </div>
+      <button id="btn-start" class="btn btn-primary">Start Session</button>
+    </div>
+
+    <div id="view-running" class="view hidden">
+      <div class="progress-header">
+        <div class="progress-text">
+          <span id="run-current">0</span> / <span id="run-total">0</span>
+        </div>
+        <div class="progress-bar">
+          <div id="run-progress" class="progress-fill" style="width: 0%"></div>
+        </div>
+      </div>
+      <div class="current-job" id="run-job">Initializing…</div>
+      <div class="live-log" id="run-log"></div>
+      <div class="actions">
+        <button id="btn-pause" class="btn btn-secondary">Pause</button>
+        <button id="btn-stop" class="btn btn-danger">Stop</button>
+      </div>
+    </div>
+
+    <div id="view-paused" class="view hidden">
+      <div class="brand">
+        <div class="brand-name">WisOwl</div>
+        <div class="brand-sub">Session Paused</div>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value" id="pause-applied">0</div>
+          <div class="stat-label">Applied</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="pause-failed">0</div>
+          <div class="stat-label">Failed</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="pause-review">0</div>
+          <div class="stat-label">Needs Review</div>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="btn-resume" class="btn btn-primary">Resume</button>
+        <button id="btn-stop-paused" class="btn btn-danger">Stop</button>
+      </div>
+    </div>
+
+    <div id="view-awaiting" class="view hidden">
+      <div class="brand">
+        <div class="brand-name">WisOwl</div>
+        <div class="brand-sub">Needs Your Attention</div>
+      </div>
+      <p class="hint" id="await-reason">A CAPTCHA was detected on the current page.</p>
+      <p class="hint">Please switch to the career page tab, solve it, then click Continue.</p>
+      <button id="btn-continue" class="btn btn-primary">I&apos;ve Resolved It — Continue</button>
+    </div>
+
+    <div id="view-summary" class="view hidden">
+      <div class="brand">
+        <div class="brand-name">WisOwl</div>
+        <div class="brand-sub">Session Complete</div>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value" id="sum-applied">0</div>
+          <div class="stat-label">Applied</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="sum-failed">0</div>
+          <div class="stat-label">Failed</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="sum-review">0</div>
+          <div class="stat-label">Needs Review</div>
+        </div>
+      </div>
+      <div class="log-list" id="sum-log"></div>
+      <button id="btn-new-session" class="btn btn-primary">New Session</button>
+    </div>
+  </div>
+
+  <script type="module" src="popup.ts"></script>
+</body>
+</html>

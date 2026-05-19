@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WisOwl Auto-Apply · Chrome Extension PRD · Final</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Geist:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:           #08090b;
+  --surface:      #0f1117;
+  --surface-2:    #151820;
+  --border:       #1c2030;
+  --border-hi:    #252c3d;
+  --text:         #b8c4d4;
+  --text-dim:     #4a5468;
+  --text-hi:      #e8ecf4;
+  --accent:       #4f8ef7;
+  --accent-bg:    #0d1e3d;
+  --green:        #34d399;
+  --green-bg:     #052e1c;
+  --amber:        #fbbf24;
+  --amber-bg:     #2d1b02;
+  --red:          #f87171;
+  --red-bg:       #2d0909;
+  --purple:       #c084fc;
+  --purple-bg:    #1e0a3c;
+  --teal:         #22d3ee;
+  --teal-bg:      #042830;
+  --mono:         'Geist Mono', monospace;
+  --sans:         'Geist', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13.5px; line-height: 1.75; }
+
+/* ── Layout ── */
+.shell { display: flex; min-height: 100vh; }
+
+aside {
+  width: 220px; min-width: 220px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  position: sticky; top: 0; height: 100vh;
+  overflow-y: auto; padding: 20px 0;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+
+.aside-brand {
+  padding: 0 16px 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.brand-name { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--accent); letter-spacing:.1em; text-transform:uppercase; }
+.brand-sub  { font-size: 10.5px; color: var(--text-dim); margin-top: 2px; }
+
+.nav-group { padding: 10px 16px 3px; font-size: 9.5px; font-weight: 600; color: var(--text-dim); letter-spacing:.12em; text-transform:uppercase; margin-top:6px; }
+aside a { display:block; padding: 4px 16px; color: var(--text-dim); font-size: 11.5px; text-decoration:none; transition: color .12s; }
+aside a:hover { color: var(--text-hi); }
+
+main { flex:1; max-width: 920px; padding: 48px 52px; overflow-x:hidden; }
+
+/* ── Doc Header ── */
+.doc-head { border-bottom: 1px solid var(--border); padding-bottom: 28px; margin-bottom: 44px; }
+.doc-head h1 { font-family: var(--mono); font-size: 20px; font-weight: 600; color: var(--text-hi); letter-spacing:-.02em; }
+.tags { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+.tag { font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 3px; border: 1px solid; }
+.tag-a { color:var(--accent); border-color:var(--accent-bg); background:var(--accent-bg); }
+.tag-g { color:var(--green);  border-color:var(--green-bg);  background:var(--green-bg);  }
+.tag-o { color:var(--amber);  border-color:var(--amber-bg);  background:var(--amber-bg);  }
+.tag-n { color:var(--text-dim); border-color:var(--border); background:var(--surface-2); }
+
+/* ── Sections ── */
+section { margin-bottom: 60px; }
+h2 {
+  font-family: var(--mono); font-size: 11px; font-weight: 600;
+  color: var(--accent); letter-spacing:.1em; text-transform:uppercase;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 20px;
+}
+h3 { font-size: 13px; font-weight: 600; color: var(--text-hi); margin: 22px 0 8px; }
+h4 { font-family: var(--mono); font-size: 10.5px; font-weight: 600; color: var(--purple); letter-spacing:.07em; text-transform:uppercase; margin: 18px 0 7px; }
+p  { margin-bottom: 9px; }
+ul { padding-left: 18px; margin-bottom: 9px; }
+li { margin-bottom: 3px; }
+hr { border:none; border-top: 1px solid var(--border); margin: 44px 0; }
+
+/* ── Callouts ── */
+.box { border-left: 2px solid; border-radius: 0 5px 5px 0; padding: 11px 14px; margin: 13px 0; }
+.box-label { font-family:var(--mono); font-size:9.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; margin-bottom:4px; }
+.info  { border-color:var(--accent); background:rgba(79,142,247,.06); }
+.info  .box-label { color:var(--accent); }
+.warn  { border-color:var(--amber); background:rgba(251,191,36,.06); }
+.warn  .box-label { color:var(--amber); }
+.rule  { border-color:var(--red); background:rgba(248,113,113,.06); }
+.rule  .box-label { color:var(--red); }
+.tip   { border-color:var(--green); background:rgba(52,211,153,.06); }
+.tip   .box-label { color:var(--green); }
+
+/* ── Code ── */
+pre {
+  background: #050608; border: 1px solid var(--border);
+  border-radius: 6px; padding: 15px; overflow-x: auto;
+  margin: 10px 0; font-family: var(--mono); font-size: 11.5px;
+  line-height: 1.65; color: #8fa4bf;
+}
+code {
+  font-family: var(--mono); font-size: 11px;
+  background: #050608; border: 1px solid var(--border);
+  padding: 1px 5px; border-radius: 3px; color: #8fa4bf;
+}
+pre code { background:none; border:none; padding:0; }
+.k { color:#79b8ff; } /* key */
+.s { color:#9ecbff; } /* string */
+.n { color:#f8c555; } /* number */
+.b { color:var(--green); } /* boolean */
+.t { color:var(--purple); } /* type */
+.c { color:#2e3d50; font-style:italic; } /* comment */
+.fn { color:var(--teal); } /* function */
+.kw { color:#ff7b72; } /* keyword */
+
+/* ── Tables ── */
+table { width:100%; border-collapse:collapse; margin:10px 0; font-size:12.5px; }
+th {
+  font-family:var(--mono); font-size:9.5px; font-weight:600;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim);
+  text-align:left; padding: 7px 11px;
+  background:var(--surface); border:1px solid var(--border);
+}
+td { padding:7px 11px; border:1px solid var(--border); vertical-align:top; }
+tr:hover td { background:rgba(255,255,255,.012); }
+td code { font-size:10.5px; }
+
+/* ── Badges ── */
+.b1  { display:inline-block; font-family:var(--mono); font-size:9.5px; font-weight:600; padding:1px 6px; border-radius:3px; background:var(--green-bg);  color:var(--green);  }
+.b2  { display:inline-block; font-family:var(--mono); font-size:9.5px; font-weight:600; padding:1px 6px; border-radius:3px; background:var(--amber-bg);  color:var(--amber);  }
+.bx  { display:inline-block; font-family:var(--mono); font-size:9.5px; font-weight:600; padding:1px 6px; border-radius:3px; background:var(--surface-2); color:var(--text-dim); }
+.req { font-family:var(--mono); font-size:10px; color:var(--red); }
+.opt { font-family:var(--mono); font-size:10px; color:var(--text-dim); }
+
+/* ── Two-col grid ── */
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0; }
+.grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin:10px 0; }
+.card  { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:13px 15px; }
+.card-title { font-family:var(--mono); font-size:10.5px; font-weight:600; color:var(--text-hi); margin-bottom:7px; }
+.card ul { padding-left:15px; }
+.card li { font-size:12px; color:var(--text-dim); margin-bottom:2px; }
+
+/* ── Flow ── */
+.flow { display:flex; flex-direction:column; margin:14px 0; }
+.fstep { display:flex; gap:11px; }
+.fline { display:flex; flex-direction:column; align-items:center; min-width:20px; }
+.fdot  { width:7px; height:7px; border-radius:50%; background:var(--accent); margin-top:7px; flex-shrink:0; }
+.fconn { width:1px; flex:1; min-height:18px; background:var(--border-hi); margin:2px 0; }
+.fcnt  { padding-bottom:18px; flex:1; }
+.ftitle { font-weight:600; color:var(--text-hi); font-size:12.5px; }
+.fdesc  { color:var(--text-dim); font-size:11.5px; margin-top:2px; }
+
+/* ── State grid ── */
+.states { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:10px 0; }
+.scard  { background:var(--surface); border:1px solid var(--border); border-radius:5px; padding:10px 12px; }
+.sname  { font-family:var(--mono); font-size:10.5px; font-weight:600; margin-bottom:3px; }
+.sdesc  { font-size:11px; color:var(--text-dim); }
+.s-idle    .sname { color:var(--text-dim); }
+.s-run     .sname { color:var(--green); }
+.s-pause   .sname { color:var(--amber); }
+.s-wait    .sname { color:var(--teal); }
+.s-err     .sname { color:var(--red); }
+.s-done    .sname { color:var(--accent); }
+
+/* ── File tree ── */
+.tree {
+  font-family:var(--mono); font-size:11.5px; background:#050608;
+  border:1px solid var(--border); border-radius:6px;
+  padding:14px; line-height:1.9; color:var(--text);
+}
+.td { color:var(--accent); }
+.tf { color:var(--text-dim); }
+.tn { color:#1e2a38; font-size:10.5px; }
+
+/* ── Method chip ── */
+.method { display:inline-block; font-family:var(--mono); font-size:9.5px; font-weight:600; padding:1px 6px; border-radius:3px; margin-right:6px; }
+.get  { background:#0d2b1d; color:var(--green); }
+.post { background:#1e1a08; color:var(--amber); }
+
+/* scrollbar */
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ── Sidebar ── -->
+<aside>
+  <div class="aside-brand">
+    <div class="brand-name">WisOwl</div>
+    <div class="brand-sub">Auto-Apply PRD · Final</div>
+  </div>
+
+  <div class="nav-group">Overview</div>
+  <a href="#summary">Product Summary</a>
+  <a href="#scope">Scope &amp; Phase</a>
+  <a href="#stack">Tech Stack</a>
+  <a href="#architecture">Architecture</a>
+
+  <div class="nav-group">Inputs &amp; Contracts</div>
+  <a href="#inputs">Required Inputs</a>
+  <a href="#models">Data Models</a>
+  <a href="#api">API Contracts</a>
+  <a href="#pregeneration">Pre-Generation Service</a>
+
+  <div class="nav-group">Extension Build</div>
+  <a href="#manifest">Manifest V3</a>
+  <a href="#files">File Structure</a>
+  <a href="#components">Components</a>
+
+  <div class="nav-group">Behavior</div>
+  <a href="#ats">ATS Detection</a>
+  <a href="#flow">Application Flow</a>
+  <a href="#fields">Field Handling</a>
+  <a href="#resume">Resume Upload</a>
+  <a href="#dropdowns">Custom Dropdowns</a>
+  <a href="#dynamic">Dynamic Fields</a>
+  <a href="#submit">Submit &amp; Confirm</a>
+  <a href="#antibot">Anti-Detection</a>
+
+  <div class="nav-group">Reliability</div>
+  <a href="#states">State Machine</a>
+  <a href="#errors">Error Handling</a>
+  <a href="#security">Security</a>
+
+  <div class="nav-group">Reference</div>
+  <a href="#popup">Popup UI</a>
+  <a href="#oos">Out of Scope</a>
+  <a href="#questions">Open Questions</a>
+</aside>
+
+<!-- ── Main ── -->
+<main>
+
+<div class="doc-head">
+  <h1>WisOwl Auto-Apply · Chrome Extension PRD</h1>
+  <div class="tags">
+    <span class="tag tag-a">Phase 1 · Final</span>
+    <span class="tag tag-g">Chrome Extension · Manifest V3</span>
+    <span class="tag tag-o">TypeScript · Vanilla DOM</span>
+    <span class="tag tag-n">v2.0 · May 2025</span>
+    <span class="tag tag-n">Author: Madhav Shankar · WisOwl</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ 01 ════════ -->
+<section id="summary">
+<h2>01 · Product Summary</h2>
+
+<p>A Chrome Extension that automatically fills and submits job applications on company career pages, running on the user's own device. It reads matched jobs from WisOwl's backend (high + medium scores), navigates to each career page, fills every form field using the user's profile and pre-generated answers, and reports outcomes back to WisOwl.</p>
+
+<div class="box info">
+  <div class="box-label">Why on-device, not cloud</div>
+  The extension runs from the user's real IP with their real browser fingerprint. Bot detection, CAPTCHAs, and proxy costs are eliminated. Infrastructure cost is ~$1.75/user/month vs ~$12.50/user/month for a cloud approach. The harder the form, the bigger the advantage.
+</div>
+
+<h3>What the extension does</h3>
+<ul>
+  <li>Authenticates via WisOwl JWT (passed from the WisOwl web app)</li>
+  <li>Fetches daily matched job list and user profile from WisOwl API</li>
+  <li>Opens each career page in a controlled tab</li>
+  <li>Detects ATS type and selects appropriate filling strategy</li>
+  <li>Fills all field types: text, select, radio, checkbox, file, date, rich text, custom dropdowns</li>
+  <li>Handles multi-page forms, iFrame-embedded forms, and async file uploads</li>
+  <li>Submits the form and captures the confirmation</li>
+  <li>Logs every outcome to WisOwl (applied / failed / needs_review / skipped)</li>
+  <li>Shows live progress in the extension popup</li>
+</ul>
+</section>
+
+<!-- ════════════════════════════════════ 02 ════════ -->
+<section id="scope">
+<h2>02 · Scope &amp; Phase</h2>
+
+<table>
+  <tr><th>Feature</th><th>Phase</th><th>Notes</th></tr>
+  <tr><td>Single-page application forms</td><td><span class="b1">P1</span></td><td>Core path.</td></tr>
+  <tr><td>Multi-page wizard forms (different URLs per step)</td><td><span class="b1">P1</span></td><td>Extension follows Next/Continue buttons across pages.</td></tr>
+  <tr><td>Multi-step same-page forms (hidden sections)</td><td><span class="b1">P1</span></td><td>Detects visible section changes after Next click.</td></tr>
+  <tr><td>iFrame-embedded forms (Taleo, Workday)</td><td><span class="b1">P1</span></td><td>allFrames injection. Same-origin iFrames only in P1.</td></tr>
+  <tr><td>Resume PDF upload — native input</td><td><span class="b1">P1</span></td><td>DataTransfer API injection from background worker.</td></tr>
+  <tr><td>Resume PDF upload — React/Angular controlled input</td><td><span class="b1">P1</span></td><td>nativeInputValueSetter override required.</td></tr>
+  <tr><td>Resume PDF upload — drag-and-drop zone</td><td><span class="b1">P1</span></td><td>DragEvent simulation.</td></tr>
+  <tr><td>Resume PDF upload — async pre-submit upload</td><td><span class="b1">P1</span></td><td>Wait for upload completion before proceeding.</td></tr>
+  <tr><td>Custom searchable dropdowns (react-select, Select2)</td><td><span class="b1">P1</span></td><td>Type-to-search simulation.</td></tr>
+  <tr><td>Dynamic conditional fields</td><td><span class="b1">P1</span></td><td>Re-scan DOM after each field interaction.</td></tr>
+  <tr><td>Native date pickers</td><td><span class="b1">P1</span></td><td>HTML5 date input.</td></tr>
+  <tr><td>Custom date widget (flatpickr, datepicker.js)</td><td><span class="b1">P1</span></td><td>Type into text field + trigger calendar if needed.</td></tr>
+  <tr><td>Rich text editor (Quill, TinyMCE) for cover letter</td><td><span class="b1">P1</span></td><td>Inject into contenteditable or iframe editor.</td></tr>
+  <tr><td>CAPTCHA: visible (reCAPTCHA v2, hCaptcha)</td><td><span class="b1">P1</span></td><td>Pause + surface tab to user. Resume after manual solve.</td></tr>
+  <tr><td>Parse-from-resume portals</td><td><span class="b1">P1</span></td><td>Upload resume first, wait for autofill, then fill remaining fields.</td></tr>
+  <tr><td>Terms &amp; conditions checkboxes</td><td><span class="b1">P1</span></td><td>Auto-accept if label matches known consent patterns.</td></tr>
+  <tr><td>ATS detection layer (10 common ATSs)</td><td><span class="b1">P1</span></td><td>Informs filling strategy. See Section 13.</td></tr>
+  <tr><td>Login-required portals (Workday auth, SAP)</td><td><span class="b2">P2</span></td><td>User logs in manually; extension resumes after.</td></tr>
+  <tr><td>Cross-origin iFrame forms</td><td><span class="b2">P2</span></td><td>Chrome blocks cross-origin scripting by default.</td></tr>
+  <tr><td>CAPTCHA: invisible (reCAPTCHA v3, Turnstile)</td><td><span class="b2">P2</span></td><td>Score-based; cannot be detected pre-submit reliably.</td></tr>
+  <tr><td>LinkedIn Easy Apply</td><td><span class="b2">P2</span></td><td>Separate module. LinkedIn has its own DOM and ToS.</td></tr>
+  <tr><td>Naukri / Indeed apply flows</td><td><span class="b2">P2</span></td><td>Portal-specific modules. API-first path preferred.</td></tr>
+  <tr><td>Scheduled / background runs (no open browser)</td><td><span class="b2">P2</span></td><td>Requires desktop app (Electron). P1 is user-triggered.</td></tr>
+  <tr><td>Application dashboard / history view</td><td><span class="bx">OUT</span></td><td>WisOwl web app feature. Extension just logs results.</td></tr>
+  <tr><td>Cover letter generation</td><td><span class="bx">OUT</span></td><td>Generated by WisOwl pre-generation service, not extension.</td></tr>
+  <tr><td>Account creation on ATSs</td><td><span class="bx">OUT</span></td><td>Skip and log needs_review if registration wall detected.</td></tr>
+  <tr><td>Video introduction uploads</td><td><span class="bx">OUT</span></td><td>Skip these fields silently.</td></tr>
+  <tr><td>Mobile (Android Chrome)</td><td><span class="bx">OUT</span></td><td>Chrome Extensions are desktop-only.</td></tr>
+</table>
+</section>
+
+<!-- ════════════════════════════════════ 03 ════════ -->
+<section id="stack">
+<h2>03 · Tech Stack</h2>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Extension (Client)</div>
+    <ul>
+      <li>TypeScript (strict mode)</li>
+      <li>Chrome Extension Manifest V3</li>
+      <li>Vanilla DOM — no React/Vue (keep bundle &lt; 200KB)</li>
+      <li>Vite for bundling</li>
+      <li>chrome.storage.local for all state</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">Form Automation</div>
+    <ul>
+      <li>Native Chrome DOM APIs (content scripts)</li>
+      <li>No Playwright, no Selenium, no headless browser</li>
+      <li>DataTransfer API for file injection</li>
+      <li>MutationObserver for dynamic field detection</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">LLM (Ambiguous Fields Only)</div>
+    <ul>
+      <li>Claude Haiku via WisOwl backend proxy</li>
+      <li>Called from background service worker only</li>
+      <li>~10% of fields need LLM; rest are deterministic</li>
+      <li>API key never touches the extension</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">WisOwl Backend (Pre-existing)</div>
+    <ul>
+      <li>REST API with JWT auth</li>
+      <li>Pre-generation service must be built before extension ships</li>
+      <li>Resume PDF served via signed CDN URL</li>
+      <li>Result logging endpoint</li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<!-- ════════════════════════════════════ 04 ════════ -->
+<section id="architecture">
+<h2>04 · Architecture Overview</h2>
+
+<pre>
+┌─────────────────────────────────────────────────────────┐
+│                   USER'S CHROME BROWSER                  │
+│                                                          │
+│  ┌──────────────────────────────────────┐               │
+│  │     Background Service Worker        │               │
+│  │  • Orchestrates session              │               │
+│  │  • Calls WisOwl API                  │               │
+│  │  • Fetches resume PDF                │               │
+│  │  • Manages tab lifecycle             │               │
+│  │  • Routes LLM assist calls           │               │
+│  └────────────────┬─────────────────────┘               │
+│                   │ chrome.scripting.executeScript        │
+│                   ▼                                      │
+│  ┌──────────────────────────────────────┐               │
+│  │     Content Script (per tab)         │               │
+│  │  • form-agent.ts                     │               │
+│  │  • field-detector.ts                 │               │
+│  │  • field-mapper.ts                   │               │
+│  │  • resume-uploader.ts                │               │
+│  │  • submit-handler.ts                 │               │
+│  └────────────────┬─────────────────────┘               │
+│                   │ chrome.runtime.sendMessage           │
+│                   ▼                                      │
+│  ┌──────────────────────────────────────┐               │
+│  │     Popup UI                         │               │
+│  │  • Shows live session state          │               │
+│  │  • Start / Pause / Resume / Stop     │               │
+│  │  • Per-job log                       │               │
+│  └──────────────────────────────────────┘               │
+└─────────────────────────────────────────────────────────┘
+         │ All API calls (REST + JWT)
+         ▼
+┌─────────────────────────────────────────────────────────┐
+│                   WISOWL BACKEND                         │
+│  • GET  /extension/profile                              │
+│  • GET  /extension/job-queue                            │
+│  • POST /extension/llm-assist  (proxies Claude Haiku)   │
+│  • POST /extension/result                               │
+│  • POST /extension/session-end                          │
+│  • GET  /extension/resume-url  (signed CDN URL)         │
+└─────────────────────────────────────────────────────────┘
+</pre>
+
+<div class="box warn">
+  <div class="box-label">MV3 Service Worker Constraint</div>
+  Chrome MV3 service workers terminate after 30s of inactivity. All session state must live in <code>chrome.storage.local</code>. Use <code>chrome.alarms</code> as a keepalive ping every 25s during active sessions. On service worker restart, read state from storage and resume cleanly.
+</div>
+</section>
+
+<!-- ════════════════════════════════════ 05 ════════ -->
+<section id="inputs">
+<h2>05 · Required Inputs</h2>
+
+<div class="box warn">
+  <div class="box-label">Developer Note — Backend Must Build First</div>
+  The extension cannot function without these three inputs. Before writing a single line of extension code, the WisOwl backend team must ship: (1) the profile endpoint, (2) the job-queue endpoint with pre-generated answers, (3) a signed resume URL endpoint. The pre-generation service contract is in Section 09.
+</div>
+
+<h3>Input A — User Profile</h3>
+<p>Fetched once per session. Cached in <code>chrome.storage.local</code>. Every field below is a potential form field match.</p>
+
+<pre>{
+  <span class="k">"personal"</span>: {
+    <span class="k">"full_name"</span>:              <span class="s">"string"</span>,         <span class="c">// required</span>
+    <span class="k">"first_name"</span>:             <span class="s">"string"</span>,         <span class="c">// required — many forms split name</span>
+    <span class="k">"last_name"</span>:              <span class="s">"string"</span>,         <span class="c">// required</span>
+    <span class="k">"email"</span>:                  <span class="s">"string"</span>,         <span class="c">// required</span>
+    <span class="k">"phone"</span>:                  <span class="s">"string"</span>,         <span class="c">// required, with country code: +91XXXXXXXXXX</span>
+    <span class="k">"phone_without_code"</span>:     <span class="s">"string"</span>,         <span class="c">// required, 10-digit: some forms want this</span>
+    <span class="k">"linkedin_url"</span>:           <span class="s">"string | null"</span>,
+    <span class="k">"portfolio_url"</span>:          <span class="s">"string | null"</span>,
+    <span class="k">"github_url"</span>:             <span class="s">"string | null"</span>,
+    <span class="k">"city"</span>:                   <span class="s">"string"</span>,
+    <span class="k">"state"</span>:                  <span class="s">"string"</span>,
+    <span class="k">"country"</span>:                <span class="s">"string"</span>,         <span class="c">// full name: "India"</span>
+    <span class="k">"country_code"</span>:           <span class="s">"string"</span>,         <span class="c">// "IN" — some dropdowns use ISO codes</span>
+    <span class="k">"pincode"</span>:                <span class="s">"string | null"</span>,
+    <span class="k">"current_ctc"</span>:            <span class="n">1200000</span>,          <span class="c">// annual INR</span>
+    <span class="k">"expected_ctc"</span>:           <span class="n">1500000</span>,
+    <span class="k">"current_ctc_lpa"</span>:        <span class="s">"12"</span>,             <span class="c">// formatted as LPA string for Indian forms</span>
+    <span class="k">"expected_ctc_lpa"</span>:       <span class="s">"15"</span>,
+    <span class="k">"notice_period_days"</span>:      <span class="n">30</span>,
+    <span class="k">"notice_period_label"</span>:    <span class="s">"30 days"</span>,         <span class="c">// dropdown-friendly label</span>
+    <span class="k">"willing_to_relocate"</span>:    <span class="b">true</span>,
+    <span class="k">"gender"</span>:                 <span class="s">"string | null"</span>,  <span class="c">// "Male" | "Female" | "Other" | "Prefer not to say"</span>
+    <span class="k">"date_of_birth"</span>:          <span class="s">"YYYY-MM-DD | null"</span>
+  },
+  <span class="k">"resume"</span>: {
+    <span class="k">"signed_url"</span>:             <span class="s">"string"</span>,         <span class="c">// required — short-TTL signed CDN URL, fetched fresh each session</span>
+    <span class="k">"filename"</span>:               <span class="s">"string"</span>,         <span class="c">// "Firstname_Lastname_Resume.pdf"</span>
+    <span class="k">"size_bytes"</span>:             <span class="n">245000</span>,           <span class="c">// used to validate against form file size limits</span>
+    <span class="k">"text_content"</span>:           <span class="s">"string"</span>          <span class="c">// full plain text — provided to LLM for context</span>
+  },
+  <span class="k">"experience"</span>: [
+    {
+      <span class="k">"company"</span>:               <span class="s">"string"</span>,
+      <span class="k">"title"</span>:                 <span class="s">"string"</span>,
+      <span class="k">"start_date"</span>:            <span class="s">"YYYY-MM"</span>,
+      <span class="k">"end_date"</span>:              <span class="s">"YYYY-MM | null"</span>,  <span class="c">// null = current</span>
+      <span class="k">"is_current"</span>:            <span class="b">false</span>,
+      <span class="k">"description"</span>:           <span class="s">"string"</span>
+    }
+  ],
+  <span class="k">"education"</span>: [
+    {
+      <span class="k">"institution"</span>:           <span class="s">"string"</span>,
+      <span class="k">"degree"</span>:                <span class="s">"string"</span>,          <span class="c">// "B.Tech Computer Science"</span>
+      <span class="k">"degree_type"</span>:           <span class="s">"string"</span>,          <span class="c">// "Bachelor's" — for dropdown forms</span>
+      <span class="k">"graduation_year"</span>:       <span class="n">2018</span>,
+      <span class="k">"percentage_gpa"</span>:        <span class="s">"string | null"</span>
+    }
+  ],
+  <span class="k">"skills"</span>:                   [<span class="s">"string"</span>],         <span class="c">// flat array</span>
+  <span class="k">"total_experience_years"</span>:   <span class="n">5</span>,
+  <span class="k">"total_experience_months"</span>:  <span class="n">62</span>,               <span class="c">// some forms ask in months</span>
+  <span class="k">"work_authorization"</span>: {
+    <span class="k">"authorized_in_india"</span>:   <span class="b">true</span>,
+    <span class="k">"requires_visa"</span>:         <span class="b">false</span>
+  }
+}</pre>
+
+<h3>Input B — Job Queue</h3>
+<p>Fetched once at session start. Includes pre-generated content per job. Only <code>high</code> and <code>medium</code> matches included.</p>
+
+<pre>{
+  <span class="k">"user_id"</span>:        <span class="s">"string"</span>,
+  <span class="k">"generated_at"</span>:   <span class="s">"ISO8601"</span>,
+  <span class="k">"daily_cap"</span>:      <span class="n">25</span>,          <span class="c">// max applications this session, set by WisOwl backend</span>
+  <span class="k">"jobs"</span>: [
+    {
+      <span class="k">"job_id"</span>:             <span class="s">"string"</span>,
+      <span class="k">"match_score"</span>:        <span class="s">"high | medium"</span>,
+      <span class="k">"title"</span>:              <span class="s">"string"</span>,
+      <span class="k">"company"</span>:            <span class="s">"string"</span>,
+      <span class="k">"apply_url"</span>:          <span class="s">"string"</span>,      <span class="c">// direct URL to application form page</span>
+      <span class="k">"job_description"</span>:    <span class="s">"string"</span>,      <span class="c">// full JD text — for LLM context</span>
+      <span class="k">"ats_hint"</span>:           <span class="s">"string | null"</span>, <span class="c">// "greenhouse" | "lever" | "workday" etc, if known</span>
+      <span class="k">"already_applied"</span>:    <span class="b">false</span>,          <span class="c">// MUST be respected — skip if true</span>
+      <span class="k">"pregenerated"</span>: {
+        <span class="k">"cover_letter"</span>:     <span class="s">"string"</span>,      <span class="c">// ready to paste as-is</span>
+        <span class="k">"qa_bank"</span>: [
+          {
+            <span class="k">"question_pattern"</span>: <span class="s">"string"</span>,  <span class="c">// regex to match against field label text</span>
+            <span class="k">"answer"</span>:           <span class="s">"string"</span>
+          }
+        ]
+      }
+    }
+  ]
+}</pre>
+
+<div class="box rule">
+  <div class="box-label">Hard Rule</div>
+  If <code>already_applied: true</code>, skip immediately — no tab, no navigation. The backend is the source of truth for deduplication; the extension just respects the flag.
+</div>
+
+<h3>Input C — Auth Token</h3>
+<p>Passed from WisOwl web app to extension via <code>chrome.runtime.sendMessage</code>. Stored in <code>chrome.storage.local</code>. Never in memory only.</p>
+
+<pre>{
+  <span class="k">"token"</span>:        <span class="s">"string (JWT)"</span>,
+  <span class="k">"expires_at"</span>:   <span class="s">"ISO8601"</span>,
+  <span class="k">"user_id"</span>:      <span class="s">"string"</span>,
+  <span class="k">"extension_id"</span>: <span class="s">"string"</span>     <span class="c">// WisOwl web app uses this to route the message</span>
+}</pre>
+
+<div class="box info">
+  <div class="box-label">Token Handoff Flow</div>
+  User logs in at <code>app.wisowl.com</code>. Web app calls <code>chrome.runtime.sendMessage(EXTENSION_ID, tokenPayload)</code>. Background service worker receives via <code>chrome.runtime.onMessageExternal</code>. Popup updates to Ready state. The extension ID must be embedded in the WisOwl web app at build time.
+</div>
+</section>
+
+<!-- ════════════════════════════════════ 06 ════════ -->
+<section id="models">
+<h2>06 · Internal Data Models</h2>
+<p>Stored in <code>chrome.storage.local</code>. Survive service worker restarts.</p>
+
+<h4>ApplicationRecord</h4>
+<pre>{
+  <span class="k">"job_id"</span>:         <span class="s">"string"</span>,
+  <span class="k">"session_id"</span>:     <span class="s">"string"</span>,        <span class="c">// UUID per run</span>
+  <span class="k">"status"</span>:         <span class="s">"pending | running | applied | failed | needs_review | skipped"</span>,
+  <span class="k">"apply_url"</span>:      <span class="s">"string"</span>,
+  <span class="k">"ats_detected"</span>:   <span class="s">"string | null"</span>, <span class="c">// which ATS was identified</span>
+  <span class="k">"started_at"</span>:     <span class="s">"ISO8601 | null"</span>,
+  <span class="k">"completed_at"</span>:   <span class="s">"ISO8601 | null"</span>,
+  <span class="k">"duration_ms"</span>:    <span class="n">0</span>,
+  <span class="k">"fields_total"</span>:   <span class="n">0</span>,              <span class="c">// fields detected</span>
+  <span class="k">"fields_filled"</span>:  <span class="n">0</span>,              <span class="c">// fields successfully filled</span>
+  <span class="k">"fields_skipped"</span>: <span class="n">0</span>,              <span class="c">// optional fields not mapped</span>
+  <span class="k">"fail_reason"</span>:    <span class="s">"string | null"</span>, <span class="c">// error code from Error Handling table</span>
+  <span class="k">"fail_detail"</span>:    <span class="s">"string | null"</span>, <span class="c">// human-readable detail for logging</span>
+  <span class="k">"confirmation"</span>:   <span class="s">"string | null"</span>, <span class="c">// confirmation text or URL post-submit</span>
+  <span class="k">"needs_review_reasons"</span>: [<span class="s">"string"</span>] <span class="c">// list of field labels that couldn't be filled</span>
+}</pre>
+
+<h4>SessionState</h4>
+<pre>{
+  <span class="k">"session_id"</span>:      <span class="s">"string"</span>,
+  <span class="k">"status"</span>:          <span class="s">"idle | running | paused | awaiting_user | completed | error"</span>,
+  <span class="k">"total_jobs"</span>:      <span class="n">0</span>,
+  <span class="k">"current_index"</span>:   <span class="n">0</span>,
+  <span class="k">"applied_count"</span>:   <span class="n">0</span>,
+  <span class="k">"failed_count"</span>:    <span class="n">0</span>,
+  <span class="k">"skipped_count"</span>:   <span class="n">0</span>,
+  <span class="k">"review_count"</span>:    <span class="n">0</span>,
+  <span class="k">"started_at"</span>:      <span class="s">"ISO8601 | null"</span>,
+  <span class="k">"active_tab_id"</span>:   <span class="s">"number | null"</span>,
+  <span class="k">"awaiting_reason"</span>: <span class="s">"CAPTCHA | USER_CONFIRM | null"</span>
+}</pre>
+</section>
+
+<!-- ════════════════════════════════════ 07 ════════ -->
+<section id="api">
+<h2>07 · WisOwl API Contracts</h2>
+
+<div class="box info">
+  <div class="box-label">Base URL &amp; Auth</div>
+  All endpoints relative to <code>WISOWL_API_BASE</code> (configured in extension, default: <code>https://api.wisowl.com/v1</code>). All requests: <code>Authorization: Bearer &lt;token&gt;</code>. On 401, extension stops session and shows "Session expired — please log in again."
+</div>
+
+<h4><span class="method get">GET</span>/extension/profile</h4>
+<p>Returns full user profile (Input A shape). Called once at session start. Response cached in storage for the session.</p>
+
+<h4><span class="method get">GET</span>/extension/job-queue?date=YYYY-MM-DD</h4>
+<p>Returns today's job list (Input B shape). Jobs ordered: high match first, then medium. Backend applies deduplication before returning.</p>
+
+<h4><span class="method get">GET</span>/extension/resume-url</h4>
+<p>Returns a fresh signed URL for the resume PDF. Called at session start (not per-job). TTL must be at least 60 minutes to cover a full session.</p>
+<pre>Response: { <span class="k">"signed_url"</span>: <span class="s">"string"</span>, <span class="k">"expires_at"</span>: <span class="s">"ISO8601"</span> }</pre>
+
+<h4><span class="method post">POST</span>/extension/llm-assist</h4>
+<p>Called by background worker when content script sends an unmappable field. Backend calls Claude Haiku and returns the answer. Keeps API key server-side.</p>
+<pre>Body:
+{
+  <span class="k">"job_id"</span>:          <span class="s">"string"</span>,
+  <span class="k">"field_label"</span>:     <span class="s">"string"</span>,       <span class="c">// exact label from form DOM</span>
+  <span class="k">"field_type"</span>:     <span class="s">"text | textarea | select | radio | checkbox"</span>,
+  <span class="k">"options"</span>:        [<span class="s">"string"</span>],      <span class="c">// available options, if applicable</span>
+  <span class="k">"context"</span>:         <span class="s">"string"</span>,       <span class="c">// surrounding section heading for context</span>
+  <span class="k">"resume_snippet"</span>:  <span class="s">"string"</span>        <span class="c">// first 500 chars of resume text</span>
+}
+
+Response:
+{
+  <span class="k">"answer"</span>:      <span class="s">"string"</span>,
+  <span class="k">"confidence"</span>:  <span class="s">"high | medium | low"</span>
+}</pre>
+<div class="box rule"><div class="box-label">Rule</div>If confidence is <code>low</code>, extension marks field as needs_review and does NOT fill it. This prevents a wrong answer being submitted.</div>
+
+<h4><span class="method post">POST</span>/extension/result</h4>
+<p>Called immediately after each job attempt. Do not batch. Accepts <code>ApplicationRecord</code> body.</p>
+
+<h4><span class="method post">POST</span>/extension/session-end</h4>
+<pre>Body: { <span class="k">"session_id"</span>: <span class="s">"string"</span>, <span class="k">"summary"</span>: SessionState }</pre>
+</section>
+
+<!-- ════════════════════════════════════ 08 ════════ -->
+<section id="pregeneration">
+<h2>08 · Pre-Generation Service Contract</h2>
+
+<div class="box warn">
+  <div class="box-label">Backend Must Build — Blocking Dependency</div>
+  This service runs on WisOwl's server before each daily session. It generates cover letters and Q&amp;A banks per job. The extension relies entirely on this output — it does not generate content itself.
+</div>
+
+<h4>When it runs</h4>
+<p>Triggered nightly (e.g. 2am IST) for all users with pending high/medium matches. Output attached to each job in the job-queue API response.</p>
+
+<h4>Input per job</h4>
+<pre>{
+  <span class="k">"user_profile"</span>:    UserProfile,   <span class="c">// full profile object</span>
+  <span class="k">"job_title"</span>:       <span class="s">"string"</span>,
+  <span class="k">"company"</span>:         <span class="s">"string"</span>,
+  <span class="k">"job_description"</span>: <span class="s">"string"</span>
+}</pre>
+
+<h4>Output per job (attached to job in queue)</h4>
+<pre>{
+  <span class="k">"cover_letter"</span>: <span class="s">"string"</span>,      <span class="c">// 150-250 words, role-specific, first person</span>
+  <span class="k">"qa_bank"</span>: [
+    {
+      <span class="k">"question_pattern"</span>: <span class="s">"why.*this role|motivation|interest in"</span>, <span class="c">// regex</span>
+      <span class="k">"answer"</span>: <span class="s">"string"</span>          <span class="c">// 2-3 sentence answer</span>
+    },
+    {
+      <span class="k">"question_pattern"</span>: <span class="s">"strength|what.*good at"</span>,
+      <span class="k">"answer"</span>: <span class="s">"string"</span>
+    },
+    {
+      <span class="k">"question_pattern"</span>: <span class="s">"salary|compensation|ctc|package"</span>,
+      <span class="k">"answer"</span>: <span class="s">"string"</span>          <span class="c">// uses expected_ctc from profile</span>
+    },
+    {
+      <span class="k">"question_pattern"</span>: <span class="s">"notice|join|available|start date"</span>,
+      <span class="k">"answer"</span>: <span class="s">"string"</span>          <span class="c">// uses notice_period from profile</span>
+    }
+    <span class="c">// minimum 8-10 patterns covering common Indian job form questions</span>
+  ]
+}</pre>
+
+<div class="box tip">
+  <div class="box-label">LLM Prompt Guidance (for the backend team)</div>
+  Use Claude Sonnet for pre-generation (quality matters here, not speed). System prompt must instruct: no AI vocabulary, first-person voice, specific to the job title and company, reference 1-2 actual skills from the user's profile. Max 250 words for cover letters. Output JSON only.
+</div>
+</section>
+
+<!-- ════════════════════════════════════ 09 ════════ -->
+<section id="manifest">
+<h2>09 · Manifest V3</h2>
+
+<pre>{
+  <span class="k">"manifest_version"</span>: <span class="n">3</span>,
+  <span class="k">"name"</span>: <span class="s">"WisOwl Auto-Apply"</span>,
+  <span class="k">"version"</span>: <span class="s">"1.0.0"</span>,
+  <span class="k">"description"</span>: <span class="s">"Automatically applies to matched jobs on your behalf."</span>,
+
+  <span class="k">"permissions"</span>: [
+    <span class="s">"tabs"</span>,        <span class="c">// open, close, read tab state</span>
+    <span class="s">"activeTab"</span>,   <span class="c">// interact with the currently active tab</span>
+    <span class="s">"scripting"</span>,   <span class="c">// inject content scripts into career pages dynamically</span>
+    <span class="s">"storage"</span>,     <span class="c">// chrome.storage.local for all persistent state</span>
+    <span class="s">"alarms"</span>       <span class="c">// keepalive pings for service worker during active sessions</span>
+  ],
+
+  <span class="k">"host_permissions"</span>: [
+    <span class="s">"&lt;all_urls&gt;"</span>   <span class="c">// career pages are on arbitrary unknown domains</span>
+  ],
+
+  <span class="k">"background"</span>: {
+    <span class="k">"service_worker"</span>: <span class="s">"background/worker.js"</span>,
+    <span class="k">"type"</span>: <span class="s">"module"</span>
+  },
+
+  <span class="k">"action"</span>: {
+    <span class="k">"default_popup"</span>: <span class="s">"popup/index.html"</span>,
+    <span class="k">"default_title"</span>: <span class="s">"WisOwl Auto-Apply"</span>
+  },
+
+  <span class="c">// content_scripts NOT declared here — injected dynamically via scripting API</span>
+  <span class="c">// so we can pass job data as a parameter at injection time</span>
+
+  <span class="k">"externally_connectable"</span>: {
+    <span class="k">"matches"</span>: [<span class="s">"https://app.wisowl.com/*"</span>]
+    <span class="c">// allows WisOwl web app to send auth token to extension</span>
+  },
+
+  <span class="k">"content_security_policy"</span>: {
+    <span class="k">"extension_pages"</span>: <span class="s">"script-src 'self'; object-src 'self'"</span>
+  },
+
+  <span class="k">"icons"</span>: {
+    <span class="s">"16"</span>:  <span class="s">"icons/icon16.png"</span>,
+    <span class="s">"48"</span>:  <span class="s">"icons/icon48.png"</span>,
+    <span class="s">"128"</span>: <span class="s">"icons/icon128.png"</span>
+  }
+}</pre>
+</section>
+
+<!-- ════════════════════════════════════ 10 ════════ -->
+<section id="files">
+<h2>10 · File Structure</h2>
+
+<div class="tree">
+<span class="td">wisowl-autoapply/</span><br>
+├── manifest.json<br>
+├── <span class="td">background/</span><br>
+│   └── <span class="tf">worker.ts</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">// orchestrator: session lifecycle, tab management, API calls</span><br>
+├── <span class="td">content/</span><br>
+│   ├── <span class="tf">form-agent.ts</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">// entry point injected per tab; coordinates all filling</span><br>
+│   ├── <span class="tf">field-detector.ts</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">// reads DOM, returns structured field inventory</span><br>
+│   ├── <span class="tf">field-mapper.ts</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">// maps profile data to detected fields (deterministic first)</span><br>
+│   ├── <span class="tf">field-filler.ts</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">// executes DOM interactions per field type</span><br>
+│   ├── <span class="tf">resume-uploader.ts</span>&nbsp;&nbsp;&nbsp;<span class="tn">// all 4 resume upload scenarios</span><br>
+│   ├── <span class="tf">dropdown-handler.ts</span>&nbsp;&nbsp;<span class="tn">// native selects + custom searchable dropdowns</span><br>
+│   ├── <span class="tf">dynamic-watcher.ts</span>&nbsp;&nbsp;&nbsp;<span class="tn">// MutationObserver for conditional fields</span><br>
+│   ├── <span class="tf">submit-handler.ts</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">// submit button detection, confirmation page detection</span><br>
+│   └── <span class="tf">captcha-detector.ts</span>&nbsp;&nbsp;<span class="tn">// detects CAPTCHA presence before and after submit</span><br>
+├── <span class="td">ats/</span><br>
+│   ├── <span class="tf">detector.ts</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">// fingerprints the ATS from URL + DOM signals</span><br>
+│   ├── <span class="tf">strategies/</span><br>
+│   │   ├── <span class="tf">greenhouse.ts</span><br>
+│   │   ├── <span class="tf">lever.ts</span><br>
+│   │   ├── <span class="tf">workday.ts</span><br>
+│   │   ├── <span class="tf">zoho.ts</span><br>
+│   │   ├── <span class="tf">darwinbox.ts</span><br>
+│   │   ├── <span class="tf">taleo.ts</span><br>
+│   │   └── <span class="tf">generic.ts</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">// fallback for unknown ATSs</span><br>
+├── <span class="td">popup/</span><br>
+│   ├── <span class="tf">index.html</span><br>
+│   ├── <span class="tf">popup.ts</span><br>
+│   └── <span class="tf">popup.css</span><br>
+├── <span class="td">api/</span><br>
+│   └── <span class="tf">wisowl.ts</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">// typed wrappers for all WisOwl API calls</span><br>
+├── <span class="td">lib/</span><br>
+│   ├── <span class="tf">storage.ts</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">// typed chrome.storage.local wrappers</span><br>
+│   ├── <span class="tf">messages.ts</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">// typed chrome.runtime message definitions</span><br>
+│   ├── <span class="tf">wait.ts</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">// waitForElement, waitForCondition helpers</span><br>
+│   └── <span class="tf">utils.ts</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">// normalize strings, random delay, label matching</span><br>
+├── <span class="td">types/</span><br>
+│   └── <span class="tf">index.ts</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">// all shared TypeScript types</span><br>
+├── <span class="td">icons/</span><br>
+├── tsconfig.json<br>
+└── vite.config.ts
+</div>
+</section>
+
+<!-- ════════════════════════════════════ 11 ════════ -->
+<section id="components">
+<h2>11 · Components</h2>
+
+<h3>background/worker.ts — Orchestrator</h3>
+<ul>
+  <li>Receives auth token via <code>chrome.runtime.onMessageExternal</code> from <code>app.wisowl.com</code></li>
+  <li>On session start: calls profile, job-queue, and resume-url APIs. Stores all to storage.</li>
+  <li>Iterates job queue: opens tab → injects content scripts → waits for result message → closes tab → logs result → delays 2–5s → next job</li>
+  <li>Sends <code>SESSION_UPDATE</code> to popup on every state change</li>
+  <li>On LLM_ASSIST_REQUEST from content script: calls <code>POST /extension/llm-assist</code>, returns result</li>
+  <li>Keepalive: <code>chrome.alarms.create('keepalive', { periodInMinutes: 0.4 })</code></li>
+  <li>On alarm: check storage for active session, re-register alarm, continue session if interrupted</li>
+</ul>
+
+<h3>content/form-agent.ts — Entry Point (Per Tab)</h3>
+<ul>
+  <li>Receives job data and profile via <code>chrome.runtime.sendMessage</code> after injection</li>
+  <li>Waits for DOM ready (max 5s)</li>
+  <li>Calls ATS detector → selects filling strategy</li>
+  <li>Calls field-detector to build field inventory</li>
+  <li>For parse-from-resume portals: calls resume-uploader first, then waits 3s for autofill, then scans remaining unfilled fields</li>
+  <li>Calls field-mapper to map each field</li>
+  <li>Calls field-filler to execute DOM interactions</li>
+  <li>After each field: waits for MutationObserver (dynamic-watcher) to settle before proceeding</li>
+  <li>Calls submit-handler when all fields on current page are filled</li>
+  <li>For multi-page forms: after submit-handler clicks Next, waits for new page, re-runs field-detector</li>
+  <li>Returns final result to service worker</li>
+</ul>
+
+<h3>content/field-detector.ts</h3>
+<p>Reads DOM only. Returns array of <code>DetectedField</code> objects. No filling logic.</p>
+<pre><span class="c">// DetectedField shape</span>
+{
+  <span class="k">"selector"</span>:     <span class="s">"string"</span>,       <span class="c">// unique CSS selector to locate element</span>
+  <span class="k">"label"</span>:        <span class="s">"string"</span>,       <span class="c">// normalised label text (lowercase, trimmed)</span>
+  <span class="k">"type"</span>:         <span class="s">"text | email | tel | number | textarea | select | radio | checkbox | file | date | richtext | custom-dropdown | unknown"</span>,
+  <span class="k">"required"</span>:     <span class="b">true</span>,
+  <span class="k">"options"</span>:      [<span class="s">"string"</span>],     <span class="c">// for select, radio, checkbox, custom-dropdown</span>
+  <span class="k">"placeholder"</span>:  <span class="s">"string | null"</span>,
+  <span class="k">"max_length"</span>:   <span class="n">0</span>,              <span class="c">// 0 = no limit</span>
+  <span class="k">"accepts"</span>:      <span class="s">"string | null"</span>  <span class="c">// file input: e.g. ".pdf,.doc"</span>
+}</pre>
+<p><strong>Detection order per field:</strong> aria-label → htmlFor label → placeholder → name attribute → surrounding text node → parent heading text.</p>
+
+<h3>content/field-mapper.ts</h3>
+<p>Two-stage. Always try deterministic first. Only call LLM if deterministic returns null.</p>
+
+<table>
+  <tr><th>Field Label Pattern (normalised)</th><th>Maps To</th><th>Method</th></tr>
+  <tr><td><code>full name, your name, name</code></td><td><code>personal.full_name</code></td><td>Deterministic</td></tr>
+  <tr><td><code>first name, given name</code></td><td><code>personal.first_name</code></td><td>Deterministic</td></tr>
+  <tr><td><code>last name, surname, family name</code></td><td><code>personal.last_name</code></td><td>Deterministic</td></tr>
+  <tr><td><code>email, email address</code></td><td><code>personal.email</code></td><td>Deterministic</td></tr>
+  <tr><td><code>phone, mobile, contact number</code></td><td><code>personal.phone</code></td><td>Deterministic</td></tr>
+  <tr><td><code>linkedin, linkedin profile</code></td><td><code>personal.linkedin_url</code></td><td>Deterministic</td></tr>
+  <tr><td><code>portfolio, website, personal url</code></td><td><code>personal.portfolio_url</code></td><td>Deterministic</td></tr>
+  <tr><td><code>github</code></td><td><code>personal.github_url</code></td><td>Deterministic</td></tr>
+  <tr><td><code>city, current city, location</code></td><td><code>personal.city</code></td><td>Deterministic</td></tr>
+  <tr><td><code>state, province</code></td><td><code>personal.state</code></td><td>Deterministic</td></tr>
+  <tr><td><code>country</code></td><td><code>personal.country</code></td><td>Deterministic</td></tr>
+  <tr><td><code>pin, pincode, zip</code></td><td><code>personal.pincode</code></td><td>Deterministic</td></tr>
+  <tr><td><code>years of experience, total experience, exp</code></td><td><code>total_experience_years</code></td><td>Deterministic</td></tr>
+  <tr><td><code>current salary, current ctc</code></td><td><code>personal.current_ctc_lpa</code></td><td>Deterministic</td></tr>
+  <tr><td><code>expected salary, expected ctc</code></td><td><code>personal.expected_ctc_lpa</code></td><td>Deterministic</td></tr>
+  <tr><td><code>notice period</code></td><td><code>personal.notice_period_label</code></td><td>Deterministic</td></tr>
+  <tr><td><code>date of birth, dob</code></td><td><code>personal.date_of_birth</code></td><td>Deterministic</td></tr>
+  <tr><td><code>gender</code></td><td><code>personal.gender</code></td><td>Deterministic</td></tr>
+  <tr><td><code>cover letter</code> (textarea/richtext)</td><td><code>pregenerated.cover_letter</code></td><td>Deterministic</td></tr>
+  <tr><td><code>resume, cv, upload</code> (file)</td><td><code>resume upload flow</code></td><td>Deterministic → resume-uploader.ts</td></tr>
+  <tr><td>Matches regex in <code>qa_bank[].question_pattern</code></td><td>Matched <code>qa_bank.answer</code></td><td>Pattern match</td></tr>
+  <tr><td>Any field not matched above</td><td>LLM assist API</td><td>LLM fallback</td></tr>
+</table>
+</section>
+
+<!-- ════════════════════════════════════ 12 ════════ -->
+<section id="ats">
+<h2>12 · ATS Detection &amp; Strategies</h2>
+
+<p>The ATS detector runs first, before form detection. It identifies the ATS from URL patterns and DOM signals, then loads the appropriate strategy module. Strategies override specific behaviours (e.g. iFrame handling, field selector heuristics) while the generic filling logic handles everything else.</p>
+
+<table>
+  <tr><th>ATS</th><th>Detection Signal</th><th>Known Quirks</th><th>Market Presence (India)</th></tr>
+  <tr>
+    <td>Greenhouse</td>
+    <td><code>boards.greenhouse.io</code> in URL</td>
+    <td>Standard HTML form. Very consistent. Easiest to fill.</td>
+    <td>Funded Indian startups, tech cos</td>
+  </tr>
+  <tr>
+    <td>Lever</td>
+    <td><code>jobs.lever.co</code> in URL</td>
+    <td>React-controlled inputs. Needs synthetic event override.</td>
+    <td>Tech companies, SaaS</td>
+  </tr>
+  <tr>
+    <td>Workday</td>
+    <td><code>myworkdayjobs.com</code> or <code>wd3.myworkday</code> in URL</td>
+    <td>iFrame embedded. Multi-step. Slow to load. Login often required (P2).</td>
+    <td>MNCs operating in India</td>
+  </tr>
+  <tr>
+    <td>Taleo (Oracle)</td>
+    <td><code>taleo.net</code> in URL or <code>taleo</code> in page scripts</td>
+    <td>iFrame embedded. Old DOM structure. Often requires account (P2).</td>
+    <td>Large Indian corporates, PSUs</td>
+  </tr>
+  <tr>
+    <td>Zoho Recruit</td>
+    <td><code>zohorecruit.com</code> or <code>zoho.com/recruit</code> in URL</td>
+    <td>Standard form. Consistent field naming. WisOwl's ICP.</td>
+    <td>Mid-size staffing agencies — primary ICP</td>
+  </tr>
+  <tr>
+    <td>Darwinbox</td>
+    <td><code>darwinbox.com</code> in URL or meta tag</td>
+    <td>React SPA. Custom dropdown components. Dynamic sections.</td>
+    <td>Indian enterprise, D2C brands</td>
+  </tr>
+  <tr>
+    <td>Keka</td>
+    <td><code>keka.com/careers</code> or <code>kekaats</code> in URL</td>
+    <td>Angular. Custom file upload component.</td>
+    <td>Indian mid-market HR</td>
+  </tr>
+  <tr>
+    <td>Freshteam</td>
+    <td><code>freshteam.com</code> in URL</td>
+    <td>Standard HTML, simple form. Easiest Indian ATS.</td>
+    <td>SMEs, startups</td>
+  </tr>
+  <tr>
+    <td>SAP SuccessFactors</td>
+    <td><code>successfactors.com</code> in URL</td>
+    <td>Heavy iFrame, slow, often requires account. Log as needs_review in P1.</td>
+    <td>Enterprise, PSUs</td>
+  </tr>
+  <tr>
+    <td>Generic / Custom</td>
+    <td>No pattern matched</td>
+    <td>Use generic strategy. Best-effort fill.</td>
+    <td>Startups, SMEs with custom career pages</td>
+  </tr>
+</table>
+
+<div class="box tip">
+  <div class="box-label">Strategy Pattern</div>
+  Each ATS strategy file exports an object with overridable hooks: <code>beforeFill()</code>, <code>detectFields()</code>, <code>afterFieldFill(field)</code>, <code>detectSubmitButton()</code>, <code>detectConfirmation()</code>. The generic strategy provides defaults. ATS-specific strategies override only what differs.
+</div>
+</section>
+
+<!-- ════════════════════════════════════ 13 ════════ -->
+<section id="flow">
+<h2>13 · Application Flow</h2>
+
+<div class="flow">
+  <div class="fstep">
+    <div class="fline"><div class="fdot"></div><div class="fconn"></div></div>
+    <div class="fcnt">
+      <div class="ftitle">1 · Auth Handoff</div>
+      <div class="fdesc">User logs in at app.wisowl.com. Web app calls <code>chrome.runtime.sendMessage(EXT_ID, tokenPayload)</code>. Service worker stores token to storage. Popup shows Ready state.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="fline"><div class="fdot"></div><div class="fconn"></div></div>
+    <div class="fcnt">
+      <div class="ftitle">2 · Session Initialisation</div>
+      <div class="fdesc">User clicks Start. Service worker calls: <code>GET /profile</code> → <code>GET /job-queue</code> → <code>GET /resume-url</code>. Stores all to storage. Filters <code>already_applied: true</code>. Enforces <code>daily_cap</code>. Sorts: high match first. Registers keepalive alarm.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="fline"><div class="fdot"></div><div class="fconn"></div></div>
+    <div class="fcnt">
+      <div class="ftitle">3 · Tab Open</div>
+      <div class="fdesc"><code>chrome.tabs.create({ url: job.apply_url, active: false })</code>. Stores <code>active_tab_id</code>. Waits for <code>chrome.tabs.onUpdated</code> with <code>status: 'complete'</code>. Timeout: 30s. On timeout → log TIMEOUT_PAGE, skip job.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="fline"><div class="fdot"></div><div class="fconn"></div></div>
+    <div class="fcnt">
+      <div class="ftitle">4 · Content Script Injection</div>
+      <div class="fdesc"><code>chrome.scripting.executeScript({ target: { tabId, allFrames: true }, files: ['content/form-agent.js'] })</code>. Immediately sends job data + profile via <code>chrome.tabs.sendMessage</code>.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="fline"><div class="fdot"></div><div class="fconn"></div></div>
+    <div class="fcnt">
+      <div class="ftitle">5 · ATS Detection</div>
+      <div class="fdesc">Checks URL pattern and DOM signals. Selects ATS strategy module. Falls back to generic if no match.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="fline"><div class="fdot"></div><div class="fconn"></div></div>
+    <div class="fcnt">
+      <div class="ftitle">6 · Parse-from-Resume Check</div>
+      <div class="fdesc">Before general field filling: check if the page has an upload-first pattern (resume field is at the top, other fields are empty or hidden). If yes → upload resume first → wait 3s for autofill → proceed to fill remaining fields only.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="fline"><div class="fdot"></div><div class="fconn"></div></div>
+    <div class="fcnt">
+      <div class="ftitle">7 · CAPTCHA Pre-Check</div>
+      <div class="fdesc">Before filling anything, check if a CAPTCHA is already rendered on the page (reCAPTCHA iframe, hCaptcha widget). If yes → enter AWAITING_USER state → surface tab → notify popup → wait for user to solve → resume when user clicks "I've solved it" in popup.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="fline"><div class="fdot"></div><div class="fconn"></div></div>
+    <div class="fcnt">
+      <div class="ftitle">8 · Field Detection &amp; Mapping</div>
+      <div class="fdesc">field-detector scans DOM for all form fields. field-mapper runs deterministic matching first, then pattern matching against qa_bank, then LLM fallback. Fields with low LLM confidence are flagged needs_review but filling continues on other fields.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="fline"><div class="fdot"></div><div class="fconn"></div></div>
+    <div class="fcnt">
+      <div class="ftitle">9 · Field Filling Loop</div>
+      <div class="fdesc">For each field: fill using type-appropriate method (see Section 14). After each fill: wait 200–600ms (randomised). After each fill: MutationObserver checks for new fields revealed by the interaction (dynamic fields). If new fields appear, add to queue and continue. Maximum 60 fields per page before logging needs_review.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="fline"><div class="fdot"></div><div class="fconn"></div></div>
+    <div class="fcnt">
+      <div class="ftitle">10 · Multi-Page Navigation</div>
+      <div class="fdesc">After all visible fields on current page are filled: look for a Next/Continue/Save &amp; Continue button (not the final Submit). Click it. Wait for page content change (URL change or DOM mutation). Re-run field-detector. Repeat until no Next button — only Submit remains.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="fline"><div class="fdot"></div><div class="fconn"></div></div>
+    <div class="fcnt">
+      <div class="ftitle">11 · Submit</div>
+      <div class="fdesc">submit-handler locates and clicks the final Submit button. Waits up to 10s for page change or success indicator. If a CAPTCHA appears post-submit: enter AWAITING_USER state. If validation errors appear: attempt one auto-fix pass, retry submit once.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="fline"><div class="fdot"></div><div class="fconn"></div></div>
+    <div class="fcnt">
+      <div class="ftitle">12 · Confirmation Capture</div>
+      <div class="fdesc">Check for: URL change to /thank-you, /confirmation, /success. Or text containing "application received", "thank you", "successfully submitted", "we'll be in touch". Log confirmation text/URL. If neither detected within 10s: log SUBMIT_UNCONFIRMED (needs_review).</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="fline"><div class="fdot"></div><div class="fconn"></div></div>
+    <div class="fcnt">
+      <div class="ftitle">13 · Result Logging &amp; Tab Cleanup</div>
+      <div class="fdesc">Send result to service worker. Service worker posts to <code>POST /extension/result</code>. Closes tab. Updates session state. Waits 2–5s (randomised). Advances to next job.</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ════════════════════════════════════ 14 ════════ -->
+<section id="fields">
+<h2>14 · Field Handling — All Types</h2>
+
+<h3>Text / Email / Tel / Number</h3>
+<pre><span class="c">// Trigger full event chain to bypass React/Angular validation</span>
+element.focus();
+element.value = mappedValue;
+element.dispatchEvent(<span class="kw">new</span> <span class="fn">Event</span>(<span class="s">'input'</span>,  { bubbles: <span class="b">true</span> }));
+element.dispatchEvent(<span class="kw">new</span> <span class="fn">Event</span>(<span class="s">'change'</span>, { bubbles: <span class="b">true</span> }));
+element.dispatchEvent(<span class="kw">new</span> <span class="fn">KeyboardEvent</span>(<span class="s">'keyup'</span>, { bubbles: <span class="b">true</span> }));
+element.blur();</pre>
+
+<h3>Textarea</h3>
+<p>Same event chain as text inputs. For text longer than 150 chars (e.g. cover letter pasted into a textarea): type character-by-character at 8–20ms/char to avoid keystroke-pattern detection.</p>
+
+<h3>Rich Text Editor (Quill, TinyMCE, contenteditable)</h3>
+<pre><span class="c">// If contenteditable div:</span>
+editorEl.focus();
+document.execCommand(<span class="s">'selectAll'</span>);
+document.execCommand(<span class="s">'insertText'</span>, <span class="b">false</span>, coverLetterText);
+
+<span class="c">// If TinyMCE iframe editor:</span>
+<span class="kw">const</span> editorDoc = iframeEl.contentDocument;
+editorDoc.body.innerHTML = coverLetterText;</pre>
+
+<h3>Native Select</h3>
+<pre><span class="c">// Set by value first; fallback to closest text match</span>
+element.value = matchedValue;
+<span class="kw">if</span> (!element.value) {
+  <span class="c">// no exact match — find closest option by text similarity</span>
+  <span class="kw">const</span> best = findClosestOption(element.options, mappedValue);
+  element.value = best.value;
+}
+element.dispatchEvent(<span class="kw">new</span> <span class="fn">Event</span>(<span class="s">'change'</span>, { bubbles: <span class="b">true</span> }));</pre>
+
+<h3>Radio Buttons</h3>
+<pre><span class="kw">const</span> radios = document.querySelectorAll(<span class="s">`input[type="radio"][name="${name}"]`</span>);
+<span class="kw">const</span> match = Array.from(radios).find(r =>
+  normalize(r.labels?.[<span class="n">0</span>]?.textContent) === normalize(mappedValue) ||
+  normalize(r.value) === normalize(mappedValue)
+);
+<span class="kw">if</span> (match) match.click();</pre>
+
+<h3>Checkboxes</h3>
+<ul>
+  <li>If label matches known boolean field (e.g. "willing to relocate"): set to matching boolean value from profile</li>
+  <li>If label matches consent pattern ("agree", "accept", "terms", "privacy", "conditions"): check it (auto-accept)</li>
+  <li>If label is unknown: call LLM assist</li>
+  <li>Checkbox group (multi-select skills, interests): check all options that appear in <code>profile.skills</code></li>
+</ul>
+
+<h3>Date — Native HTML5</h3>
+<pre><span class="c">// format as YYYY-MM-DD for input[type=date]</span>
+dateInput.value = <span class="s">"2024-06-15"</span>;
+dateInput.dispatchEvent(<span class="kw">new</span> <span class="fn">Event</span>(<span class="s">'change'</span>, { bubbles: <span class="b">true</span> }));</pre>
+
+<h3>Date — Custom Widget</h3>
+<pre><span class="c">// Type into visible text input associated with the date picker</span>
+<span class="c">// Triggers the widget's own parsing logic</span>
+textInput.value = <span class="s">"15/06/2024"</span>;   <span class="c">// try DD/MM/YYYY first for Indian forms</span>
+textInput.dispatchEvent(<span class="kw">new</span> <span class="fn">Event</span>(<span class="s">'input'</span>, { bubbles: <span class="b">true</span> }));
+<span class="c">// If a calendar popup appears, look for the matching day cell and click it</span></pre>
+
+<h3>Yes/No Toggles</h3>
+<p>Treat as a radio group. Map "Yes" or "No" based on the profile boolean value for that field.</p>
+
+<h3>Multi-Value Tag Inputs (skills, languages)</h3>
+<pre><span class="c">// Type each value, press Enter or comma, wait for tag to render</span>
+<span class="kw">for</span> (<span class="kw">const</span> skill <span class="kw">of</span> matchedSkills) {
+  tagInput.value = skill;
+  tagInput.dispatchEvent(<span class="kw">new</span> <span class="fn">KeyboardEvent</span>(<span class="s">'keydown'</span>, { key: <span class="s">'Enter'</span>, bubbles: <span class="b">true</span> }));
+  <span class="kw">await</span> <span class="fn">delay</span>(<span class="n">300</span>);
+}</pre>
+</section>
+
+<!-- ════════════════════════════════════ 15 ════════ -->
+<section id="resume">
+<h2>15 · Resume Upload — All Scenarios</h2>
+
+<div class="box warn">
+  <div class="box-label">Developer Note</div>
+  Resume upload is the most complex part of the extension. All four scenarios below must be implemented. The fallback chain is: Scenario A → B → C → D → fail with FILE_UPLOAD_FAIL.
+</div>
+
+<h3>Scenario A · Native <code>input[type=file]</code></h3>
+<p>Most common case. Extension fetches PDF in background worker, passes ArrayBuffer to content script, injects via DataTransfer.</p>
+
+<pre><span class="c">// Step 1: Background worker fetches PDF (not content script — avoids CSP block)</span>
+<span class="c">// In background/worker.ts:</span>
+chrome.runtime.onMessage.addListener(<span class="kw">async</span> (msg, sender, sendResponse) => {
+  <span class="kw">if</span> (msg.type === <span class="s">'GET_RESUME_FILE'</span>) {
+    <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(signedResumeUrl);
+    <span class="kw">const</span> buffer = <span class="kw">await</span> res.<span class="fn">arrayBuffer</span>();
+    <span class="fn">sendResponse</span>({ buffer, filename, mimeType: <span class="s">'application/pdf'</span> });
+  }
+  <span class="kw">return</span> <span class="b">true</span>; <span class="c">// keep channel open for async response</span>
+});
+
+<span class="c">// Step 2: Content script receives ArrayBuffer, injects into file input</span>
+<span class="c">// In content/resume-uploader.ts:</span>
+<span class="kw">const</span> fileData = <span class="kw">await</span> chrome.runtime.<span class="fn">sendMessage</span>({ type: <span class="s">'GET_RESUME_FILE'</span> });
+<span class="kw">const</span> blob = <span class="kw">new</span> <span class="fn">Blob</span>([fileData.buffer], { type: <span class="s">'application/pdf'</span> });
+<span class="kw">const</span> file = <span class="kw">new</span> <span class="fn">File</span>([blob], fileData.filename, { type: <span class="s">'application/pdf'</span> });
+<span class="kw">const</span> dt = <span class="kw">new</span> <span class="fn">DataTransfer</span>();
+dt.items.<span class="fn">add</span>(file);
+fileInput.files = dt.files;
+fileInput.<span class="fn">dispatchEvent</span>(<span class="kw">new</span> <span class="fn">Event</span>(<span class="s">'change'</span>, { bubbles: <span class="b">true</span> }));</pre>
+
+<h3>Scenario B · React / Angular Controlled Input</h3>
+<p>Setting <code>fileInput.files</code> directly bypasses React's internal state. Must override the native property setter first.</p>
+
+<pre><span class="c">// Override React's property descriptor before setting files</span>
+<span class="kw">const</span> nativeSetter = Object.<span class="fn">getOwnPropertyDescriptor</span>(
+  window.HTMLInputElement.prototype, <span class="s">'files'</span>
+).set;
+
+nativeSetter.<span class="fn">call</span>(fileInput, dt.files);
+fileInput.<span class="fn">dispatchEvent</span>(<span class="kw">new</span> <span class="fn">Event</span>(<span class="s">'change'</span>, { bubbles: <span class="b">true</span> }));
+
+<span class="c">// Detection signal: React/Angular forms typically have __reactFiber or ng attributes on the input</span>
+<span class="kw">const</span> isReact    = !!Object.keys(fileInput).find(k => k.startsWith(<span class="s">'__reactFiber'</span>));
+<span class="kw">const</span> isAngular  = fileInput.hasAttribute(<span class="s">'ng-model'</span>) || fileInput.hasAttribute(<span class="s">'[(ngModel)]'</span>);</pre>
+
+<h3>Scenario C · Drag-and-Drop Zone</h3>
+<p>No <code>input[type=file]</code> present. Form uses a custom div with drop event listeners.</p>
+
+<pre><span class="c">// Detect: look for file input absence + dropzone indicators</span>
+<span class="kw">const</span> hasFileInput = !!document.<span class="fn">querySelector</span>(<span class="s">'input[type="file"]'</span>);
+<span class="kw">const</span> dropZone = document.<span class="fn">querySelector</span>(
+  <span class="s">'[class*="dropzone"],[class*="drop-zone"],[class*="upload-area"],[data-dropzone],[aria-label*="upload"]'</span>
+);
+
+<span class="kw">if</span> (!hasFileInput && dropZone) {
+  <span class="c">// Simulate drag sequence</span>
+  dropZone.<span class="fn">dispatchEvent</span>(<span class="kw">new</span> <span class="fn">DragEvent</span>(<span class="s">'dragenter'</span>, { bubbles: <span class="b">true</span> }));
+  dropZone.<span class="fn">dispatchEvent</span>(<span class="kw">new</span> <span class="fn">DragEvent</span>(<span class="s">'dragover'</span>,  { bubbles: <span class="b">true</span>, cancelable: <span class="b">true</span> }));
+  dropZone.<span class="fn">dispatchEvent</span>(<span class="kw">new</span> <span class="fn">DragEvent</span>(<span class="s">'drop'</span>, {
+    bubbles: <span class="b">true</span>, cancelable: <span class="b">true</span>,
+    dataTransfer: dt   <span class="c">// DataTransfer object with the file</span>
+  }));
+  <span class="kw">await</span> <span class="fn">delay</span>(<span class="n">500</span>);
+}</pre>
+
+<h3>Scenario D · Async Pre-Submit Upload</h3>
+<p>Form uploads file immediately on selection (before Submit is clicked) — sends to S3 via XHR. Extension must wait for this background upload to complete before proceeding to fill other fields or clicking Submit.</p>
+
+<pre><span class="c">// After injecting file, wait for upload indicators to resolve</span>
+<span class="kw">const</span> uploadComplete = <span class="kw">await</span> <span class="fn">waitForCondition</span>(() => {
+  <span class="kw">const</span> uploading = document.<span class="fn">querySelector</span>(
+    <span class="s">'[class*="uploading"],[class*="progress"],[aria-label*="uploading"],[class*="spinner"]'</span>
+  );
+  <span class="kw">const</span> done = document.<span class="fn">querySelector</span>(
+    <span class="s">'[class*="upload-success"],[class*="file-name"],[class*="uploaded"],[aria-label*="uploaded"]'</span>
+  );
+  <span class="kw">return</span> !uploading && !!done;
+}, { timeout: <span class="n">30000</span>, interval: <span class="n">500</span> });
+
+<span class="kw">if</span> (!uploadComplete) <span class="kw">return</span> { status: <span class="s">'failed'</span>, reason: <span class="s">'FILE_UPLOAD_TIMEOUT'</span> };</pre>
+
+<h3>Shared Pre-Upload Checks (run before all scenarios)</h3>
+<pre><span class="c">// 1. File type check — skip upload if PDF not accepted</span>
+<span class="kw">const</span> accepts = fileInput?.getAttribute(<span class="s">'accept'</span>) || <span class="s">''</span>;
+<span class="kw">if</span> (accepts && !accepts.includes(<span class="s">'pdf'</span>) && !accepts.includes(<span class="s">'*'</span>)) {
+  <span class="kw">return</span> { status: <span class="s">'failed'</span>, reason: <span class="s">'FILE_TYPE_REJECTED'</span> };
+}
+
+<span class="c">// 2. File size check</span>
+<span class="kw">const</span> maxBytes = <span class="fn">getMaxFileSizeFromDom</span>(); <span class="c">// parse from label text like "Max 2MB"</span>
+<span class="kw">if</span> (maxBytes && profile.resume.size_bytes > maxBytes) {
+  <span class="kw">return</span> { status: <span class="s">'failed'</span>, reason: <span class="s">'FILE_SIZE_REJECTED'</span> };
+}</pre>
+</section>
+
+<!-- ════════════════════════════════════ 16 ════════ -->
+<section id="dropdowns">
+<h2>16 · Custom Dropdown Handling</h2>
+
+<p>Many modern career pages use custom searchable dropdowns (react-select, Select2, Chosen, Downshift) instead of native <code>&lt;select&gt;</code>. These look like an input but behave as a typeahead.</p>
+
+<pre><span class="c">// Detection: custom dropdown has no &lt;option&gt; children but has a role="combobox" or class pattern</span>
+<span class="kw">const</span> isCustomDropdown =
+  element.getAttribute(<span class="s">'role'</span>) === <span class="s">'combobox'</span> ||
+  element.classList.contains(<span class="s">'select__input'</span>) ||     <span class="c">// react-select</span>
+  element.classList.contains(<span class="s">'select2-search__field'</span>) || <span class="c">// Select2</span>
+  element.closest(<span class="s">'[class*="select-container"]'</span>);
+
+<span class="kw">if</span> (isCustomDropdown) {
+  <span class="c">// 1. Click the container to open the dropdown</span>
+  element.closest(<span class="s">'[class*="control"],[class*="container"]'</span>)?.click();
+  <span class="kw">await</span> <span class="fn">delay</span>(<span class="n">300</span>);
+
+  <span class="c">// 2. Type the value to filter options</span>
+  element.value = mappedValue;
+  element.<span class="fn">dispatchEvent</span>(<span class="kw">new</span> <span class="fn">Event</span>(<span class="s">'input'</span>, { bubbles: <span class="b">true</span> }));
+  <span class="kw">await</span> <span class="fn">delay</span>(<span class="n">400</span>);
+
+  <span class="c">// 3. Find the first matching option in the dropdown menu and click it</span>
+  <span class="kw">const</span> menu = document.<span class="fn">querySelector</span>(<span class="s">'[class*="menu"],[class*="dropdown"],[role="listbox"]'</span>);
+  <span class="kw">const</span> option = Array.from(menu?.querySelectorAll(<span class="s">'[class*="option"],[role="option"]'</span>) || [])
+    .find(el => normalize(el.textContent) === normalize(mappedValue));
+  option?.click();
+}</pre>
+</section>
+
+<!-- ════════════════════════════════════ 17 ════════ -->
+<section id="dynamic">
+<h2>17 · Dynamic / Conditional Fields</h2>
+
+<p>Many forms reveal new fields based on earlier answers (e.g. selecting "Yes" to "Do you have a visa?" reveals a new field "Visa Type"). The extension must detect and handle these.</p>
+
+<pre><span class="c">// After every field interaction, watch for DOM changes</span>
+<span class="kw">const</span> observer = <span class="kw">new</span> <span class="fn">MutationObserver</span>((mutations) => {
+  <span class="kw">const</span> newFields = <span class="fn">detectNewFields</span>(mutations);
+  <span class="kw">if</span> (newFields.length > <span class="n">0</span>) {
+    fieldQueue.<span class="fn">push</span>(...newFields);
+  }
+});
+
+observer.<span class="fn">observe</span>(formContainer, {
+  childList: <span class="b">true</span>,
+  subtree: <span class="b">true</span>,
+  attributes: <span class="b">true</span>,
+  attributeFilter: [<span class="s">'style'</span>, <span class="s">'class'</span>, <span class="s">'hidden'</span>, <span class="s">'aria-hidden'</span>]
+});
+
+<span class="c">// After field interaction: wait 800ms for DOM to settle before checking for new fields</span>
+<span class="kw">await</span> <span class="fn">delay</span>(<span class="n">800</span>);
+observer.<span class="fn">disconnect</span>();</pre>
+
+<div class="box tip">
+  <div class="box-label">Infinite Loop Guard</div>
+  Track all processed field selectors. Never process the same field twice per page. Cap at 60 total fields per page to prevent infinite loops on malformed pages.
+</div>
+</section>
+
+<!-- ════════════════════════════════════ 18 ════════ -->
+<section id="submit">
+<h2>18 · Submit &amp; Confirmation Detection</h2>
+
+<h3>Submit Button Detection</h3>
+<pre><span class="c">// Priority order for finding submit button:</span>
+<span class="c">// 1. input[type=submit]</span>
+<span class="c">// 2. button[type=submit]</span>
+<span class="c">// 3. button with text matching: submit, apply, send application, complete application</span>
+<span class="c">// 4. [role=button] with matching text</span>
+<span class="c">// 5. a[href] with matching text (some portals use links)</span>
+
+<span class="kw">const</span> SUBMIT_PATTERNS = [
+  <span class="s">/^submit/i</span>, <span class="s">/^apply/i</span>, <span class="s">/send application/i</span>,
+  <span class="s">/complete application/i</span>, <span class="s">/finish/i</span>, <span class="s">/confirm/i</span>
+];
+
+<span class="kw">const</span> NEXT_PATTERNS = [
+  <span class="s">/^next/i</span>, <span class="s">/continue/i</span>, <span class="s">/save &amp; continue/i</span>, <span class="s">/proceed/i</span>
+];</pre>
+
+<h3>Confirmation Detection</h3>
+<pre><span class="c">// Check URL first:</span>
+<span class="kw">const</span> SUCCESS_URL_PATTERNS = [
+  <span class="s">/thank.?you/i</span>, <span class="s">/success/i</span>, <span class="s">/confirmation/i</span>,
+  <span class="s">/application.submitted/i</span>, <span class="s">/applied/i</span>
+];
+
+<span class="c">// Then check page text:</span>
+<span class="kw">const</span> SUCCESS_TEXT_PATTERNS = [
+  <span class="s">/application.*received/i</span>, <span class="s">/thank you for applying/i</span>,
+  <span class="s">/successfully submitted/i</span>, <span class="s">/we.ll be in touch/i</span>,
+  <span class="s">/application complete/i</span>, <span class="s">/आपका आवेदन/i</span>   <span class="c">// Hindi: "your application"</span>
+];
+
+<span class="c">// Wait up to 10s checking every 500ms</span>
+<span class="kw">const</span> confirmed = <span class="kw">await</span> <span class="fn">waitForCondition</span>(() =>
+  SUCCESS_URL_PATTERNS.some(p => p.test(location.href)) ||
+  SUCCESS_TEXT_PATTERNS.some(p => p.test(document.body.innerText))
+, { timeout: <span class="n">10000</span>, interval: <span class="n">500</span> });</pre>
+</section>
+
+<!-- ════════════════════════════════════ 19 ════════ -->
+<section id="antibot">
+<h2>19 · Anti-Detection Rules</h2>
+
+<div class="box info">
+  <div class="box-label">Why This Matters Even on Device</div>
+  Although the extension runs from the user's real IP, some enterprise ATSs (Workday, Taleo) have JavaScript-level bot detection that checks interaction timing and patterns. These rules ensure the extension's behaviour is indistinguishable from a fast typist.
+</div>
+
+<table>
+  <tr><th>Rule</th><th>Implementation</th></tr>
+  <tr>
+    <td>Random delay between fields</td>
+    <td>200–600ms per field. Use <code>Math.random() * 400 + 200</code>.</td>
+  </tr>
+  <tr>
+    <td>Character-by-character typing for long text</td>
+    <td>Any textarea or text input with &gt;100 chars: type at 8–25ms/char.</td>
+  </tr>
+  <tr>
+    <td>Random delay between jobs</td>
+    <td>2,000–5,000ms between closing one tab and opening the next.</td>
+  </tr>
+  <tr>
+    <td>Focus before fill, blur after fill</td>
+    <td>Always call <code>.focus()</code> before setting value, <code>.blur()</code> after.</td>
+  </tr>
+  <tr>
+    <td>Never batch-fill all fields synchronously</td>
+    <td>Always use async/await with delays between each field.</td>
+  </tr>
+  <tr>
+    <td>Tab ordering</td>
+    <td>Fill fields in visual top-to-bottom, left-to-right order matching natural reading flow.</td>
+  </tr>
+  <tr>
+    <td>Scroll to field before filling</td>
+    <td><code>element.scrollIntoView({ behavior: 'smooth', block: 'center' })</code></td>
+  </tr>
+  <tr>
+    <td>Do not fill hidden fields</td>
+    <td>Skip any field with <code>display:none</code>, <code>visibility:hidden</code>, or <code>aria-hidden:true</code>.</td>
+  </tr>
+</table>
+</section>
+
+<!-- ════════════════════════════════════ 20 ════════ -->
+<section id="states">
+<h2>20 · State Machine</h2>
+
+<div class="states">
+  <div class="scard s-idle">
+    <div class="sname">IDLE</div>
+    <div class="sdesc">Auth valid. Profile + queue loaded. Waiting for user to click Start.</div>
+  </div>
+  <div class="scard s-run">
+    <div class="sname">RUNNING</div>
+    <div class="sdesc">Active session. Tab is open. Content script is filling a form.</div>
+  </div>
+  <div class="scard s-pause">
+    <div class="sname">PAUSED</div>
+    <div class="sdesc">User clicked Pause. Current job completed. Next job not yet started.</div>
+  </div>
+  <div class="scard s-wait">
+    <div class="sname">AWAITING_USER</div>
+    <div class="sdesc">CAPTCHA detected or low-confidence field. Tab surfaced. Waiting for user.</div>
+  </div>
+  <div class="scard s-err">
+    <div class="sname">ERROR</div>
+    <div class="sdesc">Fatal session error (e.g. API auth failure). User must restart.</div>
+  </div>
+  <div class="scard s-done">
+    <div class="sname">COMPLETED</div>
+    <div class="sdesc">All jobs in queue processed. Summary screen shown. Session end posted.</div>
+  </div>
+</div>
+
+<pre><span class="c">// Transitions</span>
+IDLE           → RUNNING         : user clicks Start, queue loaded
+RUNNING        → PAUSED          : user clicks Pause (after current job completes)
+RUNNING        → AWAITING_USER   : CAPTCHA detected | low-confidence required field
+RUNNING        → ERROR           : auth expired | unrecoverable API failure
+RUNNING        → COMPLETED       : all jobs processed
+PAUSED         → RUNNING         : user clicks Resume
+AWAITING_USER  → RUNNING         : user resolves CAPTCHA / confirms field / clicks Continue
+ERROR          → IDLE            : user dismisses error and restarts
+COMPLETED      → IDLE            : user starts a new session</pre>
+</section>
+
+<!-- ════════════════════════════════════ 21 ════════ -->
+<section id="errors">
+<h2>21 · Error Handling</h2>
+
+<table>
+  <tr><th>Condition</th><th>Code</th><th>Action</th><th>Job Status</th></tr>
+  <tr>
+    <td>Page did not load within 30s</td>
+    <td><code>TIMEOUT_PAGE</code></td>
+    <td>Close tab. Skip job.</td>
+    <td><code>failed</code></td>
+  </tr>
+  <tr>
+    <td>No form detected on page (waited 5s)</td>
+    <td><code>NO_FORM</code></td>
+    <td>Log and skip.</td>
+    <td><code>needs_review</code></td>
+  </tr>
+  <tr>
+    <td>Login / registration wall detected</td>
+    <td><code>LOGIN_REQUIRED</code></td>
+    <td>Log and skip. (P2 will handle.)</td>
+    <td><code>needs_review</code></td>
+  </tr>
+  <tr>
+    <td>CAPTCHA appears (reCAPTCHA v2, hCaptcha)</td>
+    <td><code>CAPTCHA</code></td>
+    <td>Enter AWAITING_USER. Surface tab. Notify popup. Resume on user confirmation. Timeout 5 min.</td>
+    <td>Continues after resolution</td>
+  </tr>
+  <tr>
+    <td>Required field unmappable + LLM confidence low</td>
+    <td><code>FIELD_UNMAPPABLE</code></td>
+    <td>Skip that field only. Add to needs_review_reasons. Continue filling other fields.</td>
+    <td><code>needs_review</code></td>
+  </tr>
+  <tr>
+    <td>File upload — network failure (PDF fetch failed)</td>
+    <td><code>FILE_FETCH_FAIL</code></td>
+    <td>Retry once (re-call GET /resume-url for fresh signed URL). If still fails: skip file field, continue.</td>
+    <td><code>needs_review</code></td>
+  </tr>
+  <tr>
+    <td>File upload — form rejects file type</td>
+    <td><code>FILE_TYPE_REJECTED</code></td>
+    <td>Log and skip file field. Continue filling other fields.</td>
+    <td><code>needs_review</code></td>
+  </tr>
+  <tr>
+    <td>File upload — form rejects file size</td>
+    <td><code>FILE_SIZE_REJECTED</code></td>
+    <td>Log and skip file field.</td>
+    <td><code>needs_review</code></td>
+  </tr>
+  <tr>
+    <td>Async file upload timed out (30s)</td>
+    <td><code>FILE_UPLOAD_TIMEOUT</code></td>
+    <td>Log. Skip job entirely — submitting without resume is worse than not applying.</td>
+    <td><code>failed</code></td>
+  </tr>
+  <tr>
+    <td>Submit button not found</td>
+    <td><code>NO_SUBMIT_BUTTON</code></td>
+    <td>Log. Skip job.</td>
+    <td><code>needs_review</code></td>
+  </tr>
+  <tr>
+    <td>Form validation errors shown after submit</td>
+    <td><code>VALIDATION_ERROR</code></td>
+    <td>Read highlighted error fields. Attempt one fix pass. Retry submit once. If still failing: skip.</td>
+    <td><code>failed</code></td>
+  </tr>
+  <tr>
+    <td>Confirmation not detected within 10s post-submit</td>
+    <td><code>SUBMIT_UNCONFIRMED</code></td>
+    <td>May have submitted or may not. Log text visible on page. Mark as needs_review.</td>
+    <td><code>needs_review</code></td>
+  </tr>
+  <tr>
+    <td>User closed active tab manually</td>
+    <td><code>TAB_CLOSED</code></td>
+    <td>Detect via <code>chrome.tabs.onRemoved</code>. Log job as failed. Continue to next job.</td>
+    <td><code>failed</code></td>
+  </tr>
+  <tr>
+    <td>Service worker killed mid-session (MV3)</td>
+    <td><code>WORKER_RESTART</code></td>
+    <td>On restart: read storage for incomplete session. Resume from last completed index + 1. Close any orphaned tabs.</td>
+    <td>In-progress job → <code>failed</code></td>
+  </tr>
+  <tr>
+    <td>WisOwl API returns 401</td>
+    <td><code>AUTH_EXPIRED</code></td>
+    <td>Stop session. Enter ERROR state. Show "Session expired — log in again" in popup.</td>
+    <td>Session stopped</td>
+  </tr>
+  <tr>
+    <td>WisOwl API timeout or 5xx (result post)</td>
+    <td><code>API_FAIL</code></td>
+    <td>Retry 3× with exponential backoff (1s, 2s, 4s). If all fail: queue result in storage, retry on next session start.</td>
+    <td>Continues to next job</td>
+  </tr>
+  <tr>
+    <td>Network offline during session</td>
+    <td><code>NETWORK_OFFLINE</code></td>
+    <td>Detect via <code>navigator.onLine</code>. Pause session. Poll for reconnect every 10s. Auto-resume on reconnect.</td>
+    <td>Paused</td>
+  </tr>
+  <tr>
+    <td>Dynamic field revealed after fill reveals new required fields</td>
+    <td><code>DYNAMIC_FIELD_OVERFLOW</code></td>
+    <td>Process up to 60 total fields per page. Beyond that: log and mark needs_review.</td>
+    <td><code>needs_review</code></td>
+  </tr>
+  <tr>
+    <td>Cross-origin iFrame blocks scripting</td>
+    <td><code>IFRAME_BLOCKED</code></td>
+    <td>Cannot inject into cross-origin iFrames. Log and skip. (P2 workaround TBD.)</td>
+    <td><code>needs_review</code></td>
+  </tr>
+  <tr>
+    <td>SAP SuccessFactors detected</td>
+    <td><code>ATS_UNSUPPORTED</code></td>
+    <td>SuccessFactors requires account creation. Skip in P1.</td>
+    <td><code>needs_review</code></td>
+  </tr>
+</table>
+
+<div class="box rule">
+  <div class="box-label">Non-Negotiable Rule</div>
+  Never submit a form that has any required field left empty due to a mapping failure. Submitting a blank required field damages the user's application. If a required field cannot be filled, the job must be logged as <code>needs_review</code> and skipped. Optional fields may be left blank.
+</div>
+</section>
+
+<!-- ════════════════════════════════════ 22 ════════ -->
+<section id="security">
+<h2>22 · Security Rules</h2>
+
+<table>
+  <tr><th>Rule</th><th>Implementation</th></tr>
+  <tr>
+    <td>JWT token storage</td>
+    <td>Store only in <code>chrome.storage.local</code>. Chrome encrypts this storage on-device. Never log the token.</td>
+  </tr>
+  <tr>
+    <td>Resume PDF access</td>
+    <td>Fetched via short-TTL signed URL (≥60 min TTL). URL fetched fresh at session start. Expired URLs fail gracefully.</td>
+  </tr>
+  <tr>
+    <td>LLM API key</td>
+    <td>Never present in extension bundle. All LLM calls go through WisOwl backend proxy. Extension only sends field metadata.</td>
+  </tr>
+  <tr>
+    <td>No third-party credential storage</td>
+    <td>Extension never stores usernames or passwords for career portals.</td>
+  </tr>
+  <tr>
+    <td>externally_connectable restriction</td>
+    <td>Only <code>https://app.wisowl.com/*</code> can send messages to the extension. All other sources are rejected.</td>
+  </tr>
+  <tr>
+    <td>Content script isolation</td>
+    <td>Content scripts run in an isolated world. They cannot access page JavaScript variables. Career pages cannot access extension storage or credentials.</td>
+  </tr>
+  <tr>
+    <td>User profile data exposure</td>
+    <td>Profile data is passed to content scripts only as needed per job. Full profile is not embedded in the extension bundle.</td>
+  </tr>
+  <tr>
+    <td>Session single-device lock</td>
+    <td>Backend must set a session lock on <code>POST /extension/session-end</code> and reject job-queue requests if a session is already active for that user_id.</td>
+  </tr>
+</table>
+</section>
+
+<!-- ════════════════════════════════════ 23 ════════ -->
+<section id="popup">
+<h2>23 · Popup UI</h2>
+
+<p>The popup is the only UI surface of the extension. Opened when user clicks the extension icon. 360×500px fixed size. Vanilla HTML/CSS/JS — no framework.</p>
+
+<h3>Views</h3>
+
+<table>
+  <tr><th>View</th><th>Trigger</th><th>Content</th></tr>
+  <tr>
+    <td><strong>AUTH</strong></td>
+    <td>No valid token in storage</td>
+    <td>WisOwl logo, "Connect to WisOwl" button (opens app.wisowl.com), install instructions</td>
+  </tr>
+  <tr>
+    <td><strong>READY</strong></td>
+    <td>Token valid, queue loaded</td>
+    <td>Today's job count, match breakdown (X high, Y medium), Start button</td>
+  </tr>
+  <tr>
+    <td><strong>RUNNING</strong></td>
+    <td>Session active</td>
+    <td>Progress bar, current job (company + title), current field being filled, live log (last 5 entries), Pause / Stop buttons</td>
+  </tr>
+  <tr>
+    <td><strong>PAUSED</strong></td>
+    <td>User paused</td>
+    <td>Progress so far, Resume / Stop buttons</td>
+  </tr>
+  <tr>
+    <td><strong>AWAITING_USER</strong></td>
+    <td>CAPTCHA or low-confidence field</td>
+    <td>Explanation of what needs attention, tab is surfaced, "I've resolved it — Continue" button</td>
+  </tr>
+  <tr>
+    <td><strong>SUMMARY</strong></td>
+    <td>Session complete</td>
+    <td>Applied N, Failed M, Needs Review K, full collapsible log with per-job status</td>
+  </tr>
+</table>
+
+<h3>Live Log Entry Format</h3>
+<pre><span class="c">// Each entry in the running log shows:</span>
+[✓] Atlassian — Senior PM               <span class="c">// applied</span>
+[✗] Razorpay — Product Manager          <span class="c">// failed: NO_FORM</span>
+[⚠] Swiggy — Growth PM                  <span class="c">// needs_review: salary field unmapped</span>
+[→] Meesho — Associate Director PM      <span class="c">// currently running</span></pre>
+
+<div class="box info">
+  <div class="box-label">Popup Communication Pattern</div>
+  Popup reads state from <code>chrome.storage.local</code> on open. Listens for <code>SESSION_UPDATE</code> messages from service worker via <code>chrome.runtime.onMessage</code> for live updates. Popup does NOT make direct API calls — all API interactions go through the service worker.
+</div>
+</section>
+
+<!-- ════════════════════════════════════ 24 ════════ -->
+<section id="oos">
+<h2>24 · Out of Scope — Phase 1</h2>
+
+<ul>
+  <li><strong>Scheduled / automatic runs</strong> — Extension requires open browser. Scheduling is a Phase 2 desktop app feature.</li>
+  <li><strong>Login-required portals</strong> — Workday, Taleo with mandatory accounts. P2 flow: user logs in, extension resumes.</li>
+  <li><strong>Cross-origin iFrame scripting</strong> — Chrome blocks this. P2 workaround TBD.</li>
+  <li><strong>Invisible CAPTCHAs (reCAPTCHA v3, Turnstile)</strong> — Score-based, undetectable pre-submit. P2 strategy needed.</li>
+  <li><strong>LinkedIn Easy Apply</strong> — Separate module with its own DOM and ToS considerations.</li>
+  <li><strong>Naukri / Indeed portal flows</strong> — Portal-specific modules with API-first path in P2.</li>
+  <li><strong>Application withdrawal</strong> — Cannot undo submitted applications.</li>
+  <li><strong>Video intro fields</strong> — Skip silently. Log as needs_review if required.</li>
+  <li><strong>SAP SuccessFactors</strong> — Requires account creation. Log as needs_review.</li>
+  <li><strong>Application history dashboard</strong> — WisOwl web app responsibility. Extension only logs data.</li>
+  <li><strong>Cover letter / Q&amp;A generation</strong> — Done by WisOwl pre-generation service. Extension only pastes output.</li>
+  <li><strong>Mobile (Android Chrome)</strong> — Chrome extensions are desktop-only.</li>
+</ul>
+</section>
+
+<!-- ════════════════════════════════════ 25 ════════ -->
+<section id="questions">
+<h2>25 · Open Questions — Decisions Needed Before Build</h2>
+
+<table>
+  <tr><th>#</th><th>Question</th><th>Impact</th><th>Owner</th></tr>
+  <tr>
+    <td>1</td>
+    <td>Do tabs open in background (<code>active: false</code>) or foreground? Background is less intrusive but some career pages block background tab interactions.</td>
+    <td>UX + reliability</td>
+    <td>Product</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>What is the daily application cap per user? Recommended: 20-25 to prevent spam reputation damage.</td>
+    <td>User reputation, backend load</td>
+    <td>Product</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>Does the user see and approve pre-generated answers before session starts, or is it fully automated?</td>
+    <td>Accuracy vs friction</td>
+    <td>Product</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>Where is the extension Extension ID obtained? Needs to be hardcoded in the WisOwl web app for token handoff. Changes if extension is unpublished and re-published.</td>
+    <td>Auth flow</td>
+    <td>Engineering</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td>Distribution: Chrome Web Store (1-2 week review, trusted) vs developer mode (instant, friction for users)?</td>
+    <td>Time to first user</td>
+    <td>Product</td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td>What's the CAPTCHA timeout? If user ignores CAPTCHA prompt for 5 minutes, should the job be abandoned and session continue, or wait indefinitely?</td>
+    <td>Session reliability</td>
+    <td>Product</td>
+  </tr>
+  <tr>
+    <td>7</td>
+    <td>Does the pre-generation service run nightly for all users, or on-demand when user opens the extension?</td>
+    <td>Backend load, latency</td>
+    <td>Engineering</td>
+  </tr>
+</table>
+
+<hr>
+<p style="font-family:var(--mono); font-size:10.5px; color:var(--text-dim);">
+  WisOwl Technologies Pvt. Ltd. &nbsp;·&nbsp; Auto-Apply Chrome Extension PRD · Final v2.0 &nbsp;·&nbsp; Internal Use Only
+</p>
+</section>
+
+</main>
+</div>
+</body>
+</html>

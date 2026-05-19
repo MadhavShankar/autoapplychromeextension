@@ -1,0 +1,25 @@
+{
+  "name": "wisowl-autoapply",
+  "version": "1.0.0",
+  "description": "Automatically applies to matched jobs on your behalf.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --mode development",
+    "build": "tsc --noEmit && vite build --mode production",
+    "build:analyze": "vite build --mode production && npx vite-bundle-visualizer",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.268",
+    "@vitest/ui": "^1.6.0",
+    "jsdom": "^24.0.0",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11",
+    "vitest": "^1.6.0"
+  },
+  "dependencies": {}
+}
