@@ -354,17 +354,109 @@ This plan translates the PRD into an actionable, phased implementation roadmap. 
 
 ---
 
-## 11 · Risk Register
+## 11 · Phase 8 — Backend & P2 ATS Support (NEW)
+
+### 11.1 Backend Architecture
+
+**Stack:** Supabase (Postgres + Auth + Storage + Edge Functions) + Digital Ocean Workers
+
+```
+□ Deploy Supabase Schema (backend/supabase/schema.sql)
+   □ profiles, experiences, education, skills tables
+   □ job_queue with pregenerated JSONB column
+   □ application_results with daily_stats trigger
+   □ ats_mappings reference table
+   □ Row Level Security (RLS) policies
+   □ RPC functions: get_user_profile_json(), get_job_queue_json()
+
+□ Deploy 6 Supabase Edge Functions (backend/supabase/functions/)
+   □ extension-profile — GET /extension/profile
+   □ extension-job-queue — GET /extension/job-queue
+   □ extension-resume-url — GET /extension/resume-url
+   □ extension-llm-assist — POST /extension/llm-assist (Claude Haiku proxy)
+   □ extension-result — POST /extension/result
+   □ extension-session-end — POST /extension/session-end
+
+□ Configure Environment Variables in Supabase
+   □ SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+   □ ANTHROPIC_API_KEY
+   □ CORS origin: https://app.wisowl.com
+
+□ Set up Supabase Storage Bucket
+   □ Bucket name: "resumes"
+   □ Public: false
+   □ RLS policy: users access own files only
+```
+
+### 11.2 Digital Ocean Worker — Pre-Generation Service
+
+```
+□ Deploy DO Worker (backend/do-worker/pre-generation-service.ts)
+   □ Environment: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ANTHROPIC_API_KEY
+   □ Schedule: nightly cron (e.g., 2 AM UTC)
+   □ Batch size: 10 jobs per batch (rate limit protection)
+   □ Model: claude-3-sonnet-20240229 for cover letters + QA bank generation
+
+□ Verify pregenerated content shape in job_queue.pregenerated:
+   □ { cover_letter: string, qa_bank: [{ question_pattern, answer }] }
+```
+
+### 11.3 P2 ATS Strategies
+
+| ATS | Strategy File | Status | Notes |
+|-----|--------------|--------|-------|
+| Keka | `ats/strategies/keka.ts` | P2 | Bootstrap-like forms, btn-primary detection |
+| Freshteam | `ats/strategies/freshteam.ts` | P2 | Freshworks, fresh-button classes |
+| SAP SuccessFactors | `ats/strategies/successfactors.ts` | P2 | data-sf-* attrs, multi-step wizard |
+| LinkedIn Easy Apply | `ats/strategies/linkedin.ts` | P2 | Modal-based (not new tab), special handling |
+| Naukri / Indeed | `ats/strategies/naukri-indeed.ts` | P2 | Custom portals, Apply Now links |
+
+```
+□ ats/detector.ts — add URL + DOM signatures for all 5 new ATSes
+□ ats/strategy-loader.ts — register new strategies, remove generic fallbacks
+□ content/form-agent.ts — LinkedIn Easy Apply button click + modal wait
+□ content/iframe-bridge.ts — cross-origin frame communication for Workday/Taleo/SAP
+```
+
+### 11.4 Web App Auth Handoff
+
+```
+□ Embed AuthHandoff.tsx in app.wisowl.com dashboard
+□ Hardcode Chrome Extension ID in EXTENSION_ID constant
+□ Call supabase.auth.getSession() → forward access_token to extension
+□ Handle PING detection for extension install status
+```
+
+### 11.5 iFrame Bridge Architecture
+
+```
+□ content/iframe-bridge.ts:
+   □ Child frames report fields to parent via postMessage
+   □ Parent aggregates iframe fields into FormAgent processing loop
+   □ Parent sends FILL_COMMAND to child frames
+   □ Fallback: if cross-origin iframe fields are inaccessible → IFRAME_BLOCKED → needs_review
+
+□ background/worker.ts:
+   □ Script injection already uses allFrames: true
+   □ No additional worker changes required for iframe support
+```
+
+---
+
+## 12 · Risk Register
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
 | Backend endpoints not ready on time | Medium | **Critical** | Parallel track: mock server with fixture data for extension development |
 | Chrome Web Store review rejection | Medium | High | Submit early; include detailed privacy policy; justify `<all_urls>` permission |
-| Workday/Taleo iFrame complexity | High | Medium | Document as P2; fallback to `needs_review` |
+| Workday/Taleo iFrame complexity | High | Medium | iFrame bridge implemented; cross-origin frames fallback to `needs_review` |
 | React/Angular synthetic event bypass breaks | Medium | High | Maintain fallback chain; test on latest framework versions |
 | Bot detection on major ATSs | Medium | High | Anti-detection rules (§19); if blocked, pivot to `needs_review` |
 | MV3 service worker restarts mid-fill | Medium | High | Extensive restart-resilience testing; always store state |
 | Resume PDF fetch blocked by CSP | Low | Medium | Background worker fetches (bypasses page CSP) |
+| LinkedIn Easy Apply DOM changes | High | Medium | Monitor selector health; LinkedIn modal is volatile |
+| Supabase Edge Function cold starts | Medium | Medium | Implement client-side timeout + retry with backoff |
+| DO Worker pre-generation cost overrun | Low | Medium | Batch size limits + nightly scheduling |
 
 ---
 
@@ -390,22 +482,29 @@ wisowl-autoapply/
 ├── package.json
 ├── tsconfig.json
 ├── vite.config.ts
+├── vitest.config.ts
 ├── README.md
 ├── BUILD_PLAN.md
+├── WisOwl-AutoApply-Handbook.html
 ├── background/
 │   └── worker.ts
 ├── content/
 │   ├── form-agent.ts
 │   ├── field-detector.ts
+│   ├── field-detector.test.ts
 │   ├── field-mapper.ts
+│   ├── field-mapper.test.ts
 │   ├── field-filler.ts
 │   ├── resume-uploader.ts
 │   ├── dropdown-handler.ts
 │   ├── dynamic-watcher.ts
 │   ├── submit-handler.ts
-│   └── captcha-detector.ts
+│   ├── captcha-detector.ts
+│   └── iframe-bridge.ts          ← NEW: cross-origin iframe support
 ├── ats/
 │   ├── detector.ts
+│   ├── detector.test.ts            ← NEW
+│   ├── strategy-loader.ts
 │   └── strategies/
 │       ├── generic.ts
 │       ├── greenhouse.ts
@@ -413,7 +512,13 @@ wisowl-autoapply/
 │       ├── workday.ts
 │       ├── zoho.ts
 │       ├── darwinbox.ts
-│       └── taleo.ts
+│       ├── taleo.ts
+│       ├── keka.ts                 ← NEW: P2
+│       ├── freshteam.ts            ← NEW: P2
+│       ├── successfactors.ts       ← NEW: P2
+│       ├── linkedin.ts             ← NEW: P2
+│       ├── naukri-indeed.ts        ← NEW: P2
+│       └── strategies.test.ts      ← NEW
 ├── popup/
 │   ├── index.html
 │   ├── popup.ts
@@ -421,12 +526,32 @@ wisowl-autoapply/
 ├── api/
 │   └── wisowl.ts
 ├── lib/
+│   ├── config.ts
+│   ├── logger.ts
 │   ├── storage.ts
 │   ├── messages.ts
 │   ├── wait.ts
-│   └── utils.ts
+│   ├── utils.ts
+│   └── utils.test.ts
 ├── types/
 │   └── index.ts
+├── backend/                        ← NEW
+│   ├── supabase/
+│   │   ├── schema.sql
+│   │   └── functions/
+│   │       ├── extension-profile/index.ts
+│   │       ├── extension-job-queue/index.ts
+│   │       ├── extension-resume-url/index.ts
+│   │       ├── extension-llm-assist/index.ts
+│   │       ├── extension-result/index.ts
+│   │       └── extension-session-end/index.ts
+│   ├── do-worker/
+│   │   ├── pre-generation-service.ts
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   └── README.md
+│   └── web-app/
+│       └── AuthHandoff.tsx
 └── icons/
     ├── icon16.png
     ├── icon48.png

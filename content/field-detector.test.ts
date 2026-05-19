@@ -1,7 +1,15 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { fieldDetector } from '../content/field-detector.js';
 
-// Minimal DOM setup for jsdom
+// Mock isVisible so jsdom layout issues don't break tests
+vi.mock('../lib/utils.js', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('../lib/utils.js')>();
+  return {
+    ...mod,
+    isVisible: () => true,
+  };
+});
+
 describe('fieldDetector', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
@@ -82,10 +90,15 @@ describe('fieldDetector', () => {
   it('sorts fields visually', () => {
     document.body.innerHTML = `
       <form>
-        <input type="text" name="second" style="position:absolute; top: 100px;" />
-        <input type="text" name="first" style="position:absolute; top: 10px;" />
+        <input type="text" name="second" />
+        <input type="text" name="first" />
       </form>
     `;
+    // Mock getBoundingClientRect to return position-aware rects
+    const inputs = document.querySelectorAll('input');
+    inputs[0]!.getBoundingClientRect = () => ({ top: 100, left: 0, width: 10, height: 10, right: 10, bottom: 110, x: 0, y: 100, toJSON: () => {} } as DOMRect);
+    inputs[1]!.getBoundingClientRect = () => ({ top: 10, left: 0, width: 10, height: 10, right: 10, bottom: 20, x: 0, y: 10, toJSON: () => {} } as DOMRect);
+
     const fields = fieldDetector.detect(document);
     // Should be sorted top-to-bottom
     expect(fields[0].selector).toContain('first');

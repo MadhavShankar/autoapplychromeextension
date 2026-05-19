@@ -1,4 +1,4 @@
-import type { ATSKey } from '../../types/index.js';
+import type { ATSKey } from '../types/index.js';
 
 // ═══════════════════════════════════════════════════════════════
 // ATS Detector — Identifies ATS from URL + DOM signals
@@ -54,8 +54,18 @@ const ATS_SIGNATURES: ATSSignature[] = [
   },
   {
     key: 'successfactors',
-    urlPatterns: [/successfactors\.com/i],
-    domSignals: ['successfactors', 'sap'],
+    urlPatterns: [/successfactors\.com/i, /career\d+\.sap\./i],
+    domSignals: ['successfactors', 'sap', 'data-sf-'],
+  },
+  {
+    key: 'linkedin',
+    urlPatterns: [/linkedin\.com\/jobs/i, /linkedin\.com\/hiring/i],
+    domSignals: ['linkedin', 'easy-apply', 'jobs-easy-apply'],
+  },
+  {
+    key: 'naukri_indeed',
+    urlPatterns: [/naukri\.com/i, /indeed\.com/i, /indeed\.co\./i],
+    domSignals: ['naukri', 'indeed', 'indeed-apply'],
   },
 ];
 

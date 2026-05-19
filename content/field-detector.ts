@@ -18,10 +18,12 @@ export const fieldDetector = {
     candidates.forEach((el) => {
       if (seen.has(el)) return;
       if (!isVisible(el)) return;
-      seen.add(el);
 
       const field = this.inspect(el);
-      if (field) fields.push(field);
+      if (field) {
+        seen.add(el);
+        fields.push(field);
+      }
     });
 
     const radioGroups = this.detectRadioGroups(doc, seen);

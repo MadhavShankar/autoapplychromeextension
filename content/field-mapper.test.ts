@@ -91,7 +91,7 @@ describe('fieldMapper.mapFields', () => {
   });
 
   it('maps QA bank patterns', () => {
-    const fields = [makeField('expected compensation')];
+    const fields = [makeField('compensation')];
     const mappings = fieldMapper.mapFields(fields, mockJob, mockProfile);
     expect(mappings[0].value).toBe('15 LPA');
     expect(mappings[0].source).toBe('qa_bank');

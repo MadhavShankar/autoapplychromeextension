@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WisOwl Auto-Apply — Extension Handbook</title>
+<style>
+@page { size: A4; margin: 18mm 16mm 22mm 16mm; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 11.5px;
+  line-height: 1.65;
+  color: #1a1a2e;
+  background: #fff;
+}
+.page { page-break-after: always; padding: 0 0 12px 0; }
+.page:last-child { page-break-after: auto; }
+
+/* Cover */
+.cover {
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  min-height: 90vh; text-align: center;
+}
+.cover-brand { font-family: "Courier New", monospace; font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: #4f8ef7; margin-bottom: 8px; }
+.cover h1 { font-size: 32px; font-weight: 700; color: #0f1117; letter-spacing: -.02em; margin-bottom: 10px; }
+.cover-sub { font-size: 14px; color: #4a5468; margin-bottom: 40px; }
+.cover-meta { font-size: 11px; color: #6b7280; line-height: 2; }
+.cover-meta strong { color: #1a1a2e; }
+
+/* Typography */
+h2 { font-size: 16px; font-weight: 700; color: #0f1117; margin: 28px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 13px; font-weight: 600; color: #1f2937; margin: 18px 0 8px; }
+h4 { font-size: 11.5px; font-weight: 600; color: #374151; margin: 14px 0 6px; }
+p { margin-bottom: 10px; }
+ul, ol { padding-left: 18px; margin-bottom: 10px; }
+li { margin-bottom: 4px; }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10.5px; }
+th { text-align: left; background: #f3f4f6; font-weight: 600; padding: 7px 9px; border: 1px solid #e5e7eb; }
+td { padding: 7px 9px; border: 1px solid #e5e7eb; vertical-align: top; }
+tr:nth-child(even) td { background: #fafafa; }
+
+/* Code */
+code { font-family: "SF Mono", "Courier New", monospace; font-size: 10px; background: #f3f4f6; padding: 1px 4px; border-radius: 3px; }
+pre { background: #0f1117; color: #d1d5db; padding: 12px 14px; border-radius: 6px; overflow-x: auto; font-size: 9.5px; line-height: 1.5; margin: 10px 0; }
+pre code { background: none; padding: 0; color: inherit; }
+
+/* Callouts */
+.callout { border-left: 3px solid #4f8ef7; background: #eff6ff; padding: 10px 14px; margin: 12px 0; border-radius: 0 5px 5px 0; }
+.callout-warn { border-color: #f59e0b; background: #fffbeb; }
+.callout-err { border-color: #ef4444; background: #fef2f2; }
+.callout-green { border-color: #10b981; background: #ecfdf5; }
+.callout-title { font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; color: #1f2937; }
+
+/* Status badges */
+.badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 9px; font-weight: 600; }
+.badge-req { background: #fef2f2; color: #991b1b; }
+.badge-opt { background: #f3f4f6; color: #374151; }
+.badge-done { background: #ecfdf5; color: #065f46; }
+
+/* TOC */
+.toc { column-count: 2; column-gap: 24px; font-size: 10.5px; }
+.toc li { margin-bottom: 6px; list-style: none; }
+.toc a { text-decoration: none; color: #374151; }
+.toc a::before { content: attr(data-num) "  "; font-weight: 600; color: #4f8ef7; }
+
+/* Utility */
+.mt-0 { margin-top: 0; }
+.small { font-size: 10px; color: #6b7280; }
+.print-only { display: block; }
+
+@media print {
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== COVER ==================== -->
+<div class="page cover">
+  <div class="cover-brand">WisOwl Technologies Pvt. Ltd.</div>
+  <h1>WisOwl Auto-Apply</h1>
+  <div class="cover-sub">Chrome Extension · Production Handbook</div>
+  <div class="cover-meta">
+    <strong>Version:</strong> 1.0.0<br>
+    <strong>Manifest:</strong> V3<br>
+    <strong>Stack:</strong> TypeScript · Vite · Vanilla DOM<br>
+    <strong>Date:</strong> May 2025<br>
+    <strong>Classification:</strong> Internal Use Only
+  </div>
+</div>
+
+<!-- ==================== TOC ==================== -->
+<div class="page">
+  <h2>Table of Contents</h2>
+  <ol class="toc">
+    <li><a href="#s1" data-num="01">Executive Summary</a></li>
+    <li><a href="#s2" data-num="02">What This Extension Does</a></li>
+    <li><a href="#s3" data-num="03">Architecture Overview</a></li>
+    <li><a href="#s4" data-num="04">Blocking Dependencies</a></li>
+    <li><a href="#s5" data-num="05">Developer Setup Guide</a></li>
+    <li><a href="#s6" data-num="06">API Contract Reference</a></li>
+    <li><a href="#s7" data-num="07">File Structure</a></li>
+    <li><a href="#s8" data-num="08">Security Checklist</a></li>
+    <li><a href="#s9" data-num="09">Phase 1 Limitations</a></li>
+    <li><a href="#s10" data-num="10">Build &amp; Distribution</a></li>
+    <li><a href="#s11" data-num="11">Troubleshooting</a></li>
+  </ol>
+</div>
+
+<!-- ==================== 01 ==================== -->
+<div class="page" id="s1">
+  <h2>01 · Executive Summary</h2>
+  <p>WisOwl Auto-Apply is a <strong>Manifest V3 Chrome Extension</strong> that automates job application form filling on company career pages. It runs entirely on the user's device, using their real browser fingerprint and IP address, eliminating bot detection and proxy infrastructure costs.</p>
+
+  <div class="callout callout-green">
+    <div class="callout-title">Key Value Proposition</div>
+    Infrastructure cost drops from ~$12.50/user/month (cloud automation) to ~$1.75/user/month (on-device). The harder the ATS form, the bigger the advantage.
+  </div>
+
+  <h3>Core Capabilities</h3>
+  <ul>
+    <li>Authenticates via WisOwl JWT passed from the web app</li>
+    <li>Fetches matched jobs + pre-generated answers from WisOwl API</li>
+    <li>Opens each career page in a controlled background tab</li>
+    <li>Detects ATS type and selects an appropriate filling strategy</li>
+    <li>Fills all field types: text, select, radio, checkbox, file, date, rich text, custom dropdowns</li>
+    <li>Handles multi-page forms, dynamic conditional fields, and async file uploads</li>
+    <li>Submits the form and captures confirmation text/URL</li>
+    <li>Reports every outcome back to WisOwl (applied / failed / needs_review / skipped)</li>
+    <li>Survives Chrome MV3 service worker restarts via persistent storage</li>
+  </ul>
+
+  <h3>Tech Stack</h3>
+  <table>
+    <tr><th>Layer</th><th>Technology</th><th>Rationale</th></tr>
+    <tr><td>Language</td><td>TypeScript (strict)</td><td>Type safety across messaging boundaries</td></tr>
+    <tr><td>Extension</td><td>Chrome Manifest V3</td><td>Modern standard, CWS compliant</td></tr>
+    <tr><td>Bundler</td><td>Vite</td><td>Fast builds, multiple entry points</td></tr>
+    <tr><td>DOM</td><td>Vanilla JS</td><td>Bundle target &lt; 200 KB, no framework overhead</td></tr>
+    <tr><td>Storage</td><td>chrome.storage.local</td><td>Survives worker restarts, encrypted on-device</td></tr>
+    <tr><td>Tests</td><td>Vitest + jsdom</td><td>Unit tests for detection, mapping, utilities</td></tr>
+  </table>
+</div>
+
+<!-- ==================== 02 ==================== -->
+<div class="page" id="s2">
+  <h2>02 · What This Extension Does</h2>
+
+  <h3>User Flow</h3>
+  <ol>
+    <li><strong>Auth Handoff</strong> — User logs in at <code>app.wisowl.com</code>. The web app calls <code>chrome.runtime.sendMessage(EXT_ID, tokenPayload)</code>. The extension stores the JWT in <code>chrome.storage.local</code>.</li>
+    <li><strong>Session Start</strong> — User clicks Start in the popup. The background worker fetches profile, job queue, and a fresh signed resume URL from the WisOwl API.</li>
+    <li><strong>Job Iteration</strong> — For each job:
+      <ul>
+        <li>Open career page tab (background)</li>
+        <li>Inject content script</li>
+        <li>Detect ATS → load strategy</li>
+        <li>Detect all form fields</li>
+        <li>Map profile data to fields (deterministic → QA bank → LLM fallback)</li>
+        <li>Fill fields with anti-detection delays and event chains</li>
+        <li>Handle multi-page navigation</li>
+        <li>Click Submit and capture confirmation</li>
+        <li>Log result to WisOwl API</li>
+        <li>Close tab, wait 2–5s, proceed to next job</li>
+      </ul>
+    </li>
+    <li><strong>Session End</strong> — When queue completes, show summary popup with applied / failed / needs_review counts.</li>
+  </ol>
+
+  <h3>Anti-Detection Behaviors</h3>
+  <table>
+    <tr><th>Rule</th><th>Implementation</th></tr>
+    <tr><td>Random delay between fields</td><td>200–600ms per field</td></tr>
+    <tr><td>Character-by-character typing</td><td>8–25ms/char for text &gt; 100 chars</td></tr>
+    <tr><td>Random delay between jobs</td><td>2,000–5,000ms</td></tr>
+    <tr><td>Focus before fill, blur after</td><td>Full synthetic event chain</td></tr>
+    <tr><td>Never batch-fill synchronously</td><td>Strict async/await with delays</td></tr>
+    <tr><td>Visual order filling</td><td>Top-to-bottom, left-to-right</td></tr>
+    <tr><td>Scroll to field before filling</td><td><code>scrollIntoView({ block: 'center' })</code></td></tr>
+    <tr><td>Skip hidden fields</td><td><code>display:none</code>, <code>visibility:hidden</code>, <code>aria-hidden</code></td></tr>
+  </table>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">Hard Rule</div>
+    Never submit a form that has any required field left empty due to a mapping failure. If a required field cannot be filled, the job is logged as <code>needs_review</code> and skipped.
+  </div>
+</div>
+
+<!-- ==================== 03 ==================== -->
+<div class="page" id="s3">
+  <h2>03 · Architecture Overview</h2>
+
+  <h3>Component Diagram</h3>
+  <pre>┌─────────────────────────────────────────────────────────┐
+│              USER'S CHROME BROWSER                      │
+│                                                         │
+│  ┌──────────────────────────────────────┐              │
+│  │   Background Service Worker          │              │
+│  │  • Orchestrates session              │              │
+│  │  • Calls WisOwl API (JWT)            │              │
+│  │  • Fetches + caches resume as base64 │              │
+│  │  • Manages tab lifecycle             │              │
+│  │  • Routes LLM assist calls           │              │
+│  │  • Keepalive alarm (MV3 survival)    │              │
+│  └──────────────┬───────────────────────┘              │
+│                 │ chrome.scripting.executeScript        │
+│                 ▼                                       │
+│  ┌──────────────────────────────────────┐              │
+│  │   Content Script (per tab)           │              │
+│  │  • form-agent.ts                     │              │
+│  │  • field-detector.ts                 │              │
+│  │  • field-mapper.ts                   │              │
+│  │  • resume-uploader.ts                │              │
+│  │  • submit-handler.ts                 │              │
+│  └──────────────┬───────────────────────┘              │
+│                 │ chrome.runtime.sendMessage           │
+│                 ▼                                       │
+│  ┌──────────────────────────────────────┐              │
+│  │   Popup UI (360×500 px)              │              │
+│  │  • Auth / Ready / Running / Paused   │              │
+│  │  • Awaiting User / Summary           │              │
+│  │  • Live log (last 5 entries)         │              │
+│  └──────────────────────────────────────┘              │
+└─────────────────────────────────────────────────────────┘
+           │ All API calls (REST + JWT)
+           ▼
+┌─────────────────────────────────────────────────────────┐
+│              WISOWL BACKEND                              │
+│  • GET  /extension/profile                               │
+│  • GET  /extension/job-queue                             │
+│  • GET  /extension/resume-url                            │
+│  • POST /extension/llm-assist  (proxies Claude Haiku)    │
+│  • POST /extension/result                                │
+│  • POST /extension/session-end                           │
+└─────────────────────────────────────────────────────────┘</pre>
+
+  <h3>State Machine</h3>
+  <table>
+    <tr><th>State</th><th>Description</th><th>Transitions To</th></tr>
+    <tr><td>IDLE</td><td>Auth valid, queue loaded, waiting for Start</td><td>RUNNING</td></tr>
+    <tr><td>RUNNING</td><td>Active session, tab open, content script filling</td><td>PAUSED, AWAITING_USER, COMPLETED, ERROR</td></tr>
+    <tr><td>PAUSED</td><td>User clicked Pause</td><td>RUNNING</td></tr>
+    <tr><td>AWAITING_USER</td><td>CAPTCHA detected or low-confidence field</td><td>RUNNING</td></tr>
+    <tr><td>COMPLETED</td><td>All jobs processed</td><td>IDLE</td></tr>
+    <tr><td>ERROR</td><td>Fatal error (e.g., auth expired)</td><td>IDLE</td></tr>
+  </table>
+
+  <h3>MV3 Survival Strategy</h3>
+  <p>Chrome MV3 service workers terminate after ~30s of inactivity. The extension handles this by:</p>
+  <ol>
+    <li>Storing <strong>all</strong> session state in <code>chrome.storage.local</code></li>
+    <li>Creating a keepalive alarm every 24s (<code>chrome.alarms.create('keepalive', { periodInMinutes: 0.4 })</code>)</li>
+    <li>On worker restart, reading the <code>is_running</code> flag from storage</li>
+    <li>If <code>is_running === true</code> but the process was killed, resuming from the last known job index</li>
+  </ol>
+</div>
+
+<!-- ==================== 04 ==================== -->
+<div class="page" id="s4">
+  <h2>04 · Blocking Dependencies</h2>
+  <p class="small">The extension <strong>cannot function</strong> without these inputs. They must be built and deployed <em>before</em> the extension ships.</p>
+
+  <h3>A. Backend API Endpoints <span class="badge badge-req">REQUIRED</span></h3>
+  <table>
+    <tr><th>Method</th><th>Endpoint</th><th>Response Shape</th></tr>
+    <tr><td>GET</td><td><code>/extension/profile</code></td><td><code>UserProfile</code> (see §06)</td></tr>
+    <tr><td>GET</td><td><code>/extension/job-queue?date=YYYY-MM-DD</code></td><td><code>JobQueue</code> with pre-generated content</td></tr>
+    <tr><td>GET</td><td><code>/extension/resume-url</code></td><td><code>{ signed_url, expires_at }</code></td></tr>
+    <tr><td>POST</td><td><code>/extension/llm-assist</code></td><td><code>{ answer, confidence }</code></td></tr>
+    <tr><td>POST</td><td><code>/extension/result</code></td><td>201 Accepted</td></tr>
+    <tr><td>POST</td><td><code>/extension/session-end</code></td><td>201 Accepted</td></tr>
+  </table>
+
+  <h3>B. Pre-Generation Service <span class="badge badge-req">REQUIRED</span></h3>
+  <p>Must run <strong>before each daily session</strong> (nightly batch recommended). For every high/medium match job, generates:</p>
+  <ul>
+    <li><code>cover_letter</code>: 150–250 words, role-specific, first person</li>
+    <li><code>qa_bank</code>: 8–10 regex patterns covering common form questions (salary, notice period, motivation, strengths, etc.)</li>
+  </ul>
+  <p>Uses Claude Sonnet for quality. System prompt must forbid AI vocabulary and enforce first-person voice.</p>
+
+  <h3>C. JWT Auth System <span class="badge badge-req">REQUIRED</span></h3>
+  <p>The WisOwl web app must generate a JWT and pass it to the extension via <code>chrome.runtime.sendMessage(EXTENSION_ID, payload)</code>. The payload must include:</p>
+  <pre>{ "token": "jwt_string", "expires_at": "ISO8601", "user_id": "string", "extension_id": "string" }</pre>
+
+  <h3>D. Resume CDN with Signed URLs <span class="badge badge-req">REQUIRED</span></h3>
+  <p>User resume PDFs must be hosted on a CDN (S3, R2, etc.) with signed URLs. TTL must be ≥ 60 minutes. The backend returns a fresh signed URL at session start.</p>
+
+  <h3>E. Extension ID Integration <span class="badge badge-req">REQUIRED</span></h3>
+  <p>The WisOwl web app must hardcode the extension's Chrome Extension ID to send the auth token. This ID is obtained from <code>chrome://extensions</code> after loading the unpacked extension, or from the Chrome Web Store developer dashboard after publishing.</p>
+
+  <div class="callout callout-err">
+    <div class="callout-title">Critical Integration Point</div>
+    If the web app sends messages to the wrong Extension ID, auth fails silently. The popup will show "Connect to WisOwl" forever. The Extension ID must be embedded in the web app at build time.
+  </div>
+
+  <h3>F. Chrome Web Store Assets <span class="badge badge-opt">OPTIONAL FOR DEV</span></h3>
+  <ul>
+    <li>Icons: 16×16, 48×48, 128×128 PNG files in <code>icons/</code></li>
+    <li>Privacy policy (required for <code>&lt;all_urls&gt;</code> permission)</li>
+    <li>Justification for broad host permission: <em>"The extension needs to inject content scripts on arbitrary company career pages to fill application forms."</em></li>
+  </ul>
+</div>
+
+<!-- ==================== 05 ==================== -->
+<div class="page" id="s5">
+  <h2>05 · Developer Setup Guide</h2>
+
+  <h3>Prerequisites</h3>
+  <ul>
+    <li>Node.js 18+ and npm</li>
+    <li>Google Chrome (desktop only — MV3 extensions do not run on Android)</li>
+    <li>Git</li>
+  </ul>
+
+  <h3>Step 1: Clone & Install</h3>
+  <pre>git clone https://github.com/MadhavShankar/autoapplychromeextension.git
+cd autoapplychromeextension
+npm install</pre>
+
+  <h3>Step 2: Configure</h3>
+  <p>Edit <code>lib/config.ts</code>:</p>
+  <pre>export const config = {
+  apiBaseUrl: 'https://api.wisowl.com/v1',   // ← your API domain
+  dailyCap: 25,                               // ← match backend
+  // ... other settings
+};</pre>
+
+  <p>Edit <code>public/manifest.json</code>:</p>
+  <pre>"externally_connectable": {
+  "matches": ["https://app.wisowl.com/*"]   // ← your web app origin
+}</pre>
+
+  <h3>Step 3: Build</h3>
+  <pre>npm run build</pre>
+  <p>Output goes to <code>dist/</code> with this structure:</p>
+  <pre>dist/
+├── manifest.json
+├── background.js              (ES module)
+├── content/
+│   └── form-agent.js          (IIFE bundle)
+├── popup/
+│   ├── index.html
+│   ├── popup.css
+│   └── popup.js
+└── icons/
+    ├── icon16.png
+    ├── icon48.png
+    └── icon128.png</pre>
+
+  <h3>Step 4: Load in Chrome</h3>
+  <ol>
+    <li>Open <code>chrome://extensions</code></li>
+    <li>Enable <strong>Developer mode</strong> (toggle top-right)</li>
+    <li>Click <strong>Load unpacked</strong></li>
+    <li>Select the <code>dist/</code> folder</li>
+    <li>Copy the <strong>Extension ID</strong> from the extension card</li>
+  </ol>
+
+  <h3>Step 5: Integrate with Web App</h3>
+  <p>Embed the Extension ID in your web app frontend:</p>
+  <pre>const EXTENSION_ID = 'abcdefghijklmnopabcdefghijklmnop';
+
+function handoffToken(jwt, userId, expiresAt) {
+  chrome.runtime.sendMessage(EXTENSION_ID, {
+    token: jwt,
+    user_id: userId,
+    expires_at: expiresAt,
+    extension_id: EXTENSION_ID
+  });
+}</pre>
+
+  <h3>Step 6: Run Tests</h3>
+  <pre>npm test           # run once
+npm run test:watch # watch mode</pre>
+
+  <h3>Development Mode</h3>
+  <pre>npm run dev</pre>
+  <p>Starts Vite dev server with HMR for popup UI. Background worker changes require manual extension reload in <code>chrome://extensions</code>.</p>
+</div>
+
+<!-- ==================== 06 ==================== -->
+<div class="page" id="s6">
+  <h2>06 · API Contract Reference</h2>
+
+  <h3>Auth</h3>
+  <p>All endpoints require <code>Authorization: Bearer &lt;jwt&gt;</code>. On 401, extension stops session and shows "Session expired — please log in again."</p>
+
+  <h3>GET /extension/profile</h3>
+  <p>Returns the full user profile. Every field is a potential form match.</p>
+  <pre>{
+  "personal": {
+    "full_name": "string",
+    "first_name": "string",
+    "last_name": "string",
+    "email": "string",
+    "phone": "+91XXXXXXXXXX",
+    "phone_without_code": "10-digit",
+    "linkedin_url": "string | null",
+    "portfolio_url": "string | null",
+    "github_url": "string | null",
+    "city": "string",
+    "state": "string",
+    "country": "India",
+    "country_code": "IN",
+    "pincode": "string | null",
+    "current_ctc": 1200000,
+    "expected_ctc": 1500000,
+    "current_ctc_lpa": "12",
+    "expected_ctc_lpa": "15",
+    "notice_period_days": 30,
+    "notice_period_label": "30 days",
+    "willing_to_relocate": true,
+    "gender": "Male | Female | Other | Prefer not to say",
+    "date_of_birth": "YYYY-MM-DD | null"
+  },
+  "resume": { "signed_url": "string", "filename": "string", "size_bytes": 245000, "text_content": "string" },
+  "experience": [{ "company": "string", "title": "string", "start_date": "YYYY-MM", "end_date": "YYYY-MM | null", "is_current": false, "description": "string" }],
+  "education": [{ "institution": "string", "degree": "string", "degree_type": "string", "graduation_year": 2018, "percentage_gpa": "string | null" }],
+  "skills": ["string"],
+  "total_experience_years": 5,
+  "total_experience_months": 62,
+  "work_authorization": { "authorized_in_india": true, "requires_visa": false }
+}</pre>
+
+  <h3>GET /extension/job-queue?date=YYYY-MM-DD</h3>
+  <pre>{
+  "user_id": "string",
+  "generated_at": "ISO8601",
+  "daily_cap": 25,
+  "jobs": [
+    {
+      "job_id": "string",
+      "match_score": "high | medium",
+      "title": "string",
+      "company": "string",
+      "apply_url": "string",
+      "job_description": "string",
+      "ats_hint": "greenhouse | lever | workday | null",
+      "already_applied": false,
+      "pregenerated": {
+        "cover_letter": "string",
+        "qa_bank": [
+          { "question_pattern": "regex", "answer": "string" }
+        ]
+      }
+    }
+  ]
+}</pre>
+
+  <h3>POST /extension/llm-assist</h3>
+  <pre>// Request
+{ "job_id": "string", "field_label": "string", "field_type": "text | select | radio | checkbox", "options": ["string"], "context": "string", "resume_snippet": "string" }
+
+// Response
+{ "answer": "string", "confidence": "high | medium | low" }</pre>
+  <p>If confidence is <code>low</code>, the extension marks the field as <code>needs_review</code> and does <strong>not</strong> fill it.</p>
+
+  <h3>POST /extension/result</h3>
+  <pre>{ "record": ApplicationRecord }</pre>
+  <p>Called immediately after each job attempt. No batching. If the call fails, the result is queued in <code>chrome.storage.local</code> and retried on the next session start.</p>
+</div>
+
+<!-- ==================== 07 ==================== -->
+<div class="page" id="s7">
+  <h2>07 · File Structure</h2>
+  <pre>wisowl-autoapply/
+├── manifest.json                  # MV3 manifest (copied from public/)
+├── package.json
+├── tsconfig.json
+├── vite.config.ts                 # Production build: popup + background ESM + content IIFE
+├── vitest.config.ts               # Test config (jsdom)
+├── BUILD_PLAN.md                  # 7-phase implementation roadmap
+├── README.md
+│
+├── background/
+│   └── worker.ts                  # Session orchestrator, API calls, tab lifecycle, keepalive
+│
+├── content/
+│   ├── form-agent.ts              # Per-tab entry point: ATS detect → fill loop → submit
+│   ├── field-detector.ts          # DOM scanning for all interactive form elements
+│   ├── field-mapper.ts            # Deterministic → QA bank → LLM fallback mapping
+│   ├── field-filler.ts            # Type-appropriate DOM interactions per field
+│   ├── resume-uploader.ts         # 4 upload scenarios (native, React/Angular, drag-drop, async)
+│   ├── dropdown-handler.ts        # Native selects + custom searchable dropdowns
+│   ├── dynamic-watcher.ts         # MutationObserver for conditional field detection
+│   ├── submit-handler.ts          # Submit button detection + confirmation capture
+│   └── captcha-detector.ts        # reCAPTCHA v2, hCaptcha, Turnstile detection
+│
+├── ats/
+│   ├── detector.ts                # URL + DOM fingerprinting
+│   ├── strategy-loader.ts         # Maps ATS key → strategy module
+│   └── strategies/
+│       ├── generic.ts             # Default hooks
+│       ├── greenhouse.ts          # Standard HTML, very consistent
+│       ├── lever.ts               # React synthetic events
+│       ├── workday.ts             # iFrame, multi-step, data-automation-id
+│       ├── zoho.ts                # Consistent field naming
+│       ├── darwinbox.ts           # React SPA, custom dropdowns
+│       └── taleo.ts               # iFrame, old DOM
+│
+├── popup/
+│   ├── index.html                 # Popup shell (360×500)
+│   ├── popup.ts                   # State-driven view renderer
+│   └── popup.css                  # Dark theme styles
+│
+├── api/
+│   └── wisowl.ts                  # Typed REST wrappers with retry, offline queue, timeouts
+│
+├── lib/
+│   ├── config.ts                  # Centralized runtime configuration
+│   ├── logger.ts                  # Structured logging with levels
+│   ├── storage.ts                 # chrome.storage.local wrappers with namespace
+│   ├── messages.ts                # Typed chrome.runtime messaging with timeouts
+│   ├── wait.ts                    # Async polling, delays, timeouts
+│   └── utils.ts                   # String normalization, fuzzy match, anti-detection helpers
+│
+├── types/
+│   └── index.ts                   # All shared TypeScript types, enums, interfaces
+│
+└── icons/
+    ├── icon16.png
+    ├── icon48.png
+    └── icon128.png</pre>
+</div>
+
+<!-- ==================== 08 ==================== -->
+<div class="page" id="s8">
+  <h2>08 · Security Checklist</h2>
+  <table>
+    <tr><th>Rule</th><th>Implementation</th><th>Status</th></tr>
+    <tr><td>JWT token storage</td><td><code>chrome.storage.local</code> only. Chrome encrypts on-device. Never logged.</td><td>✅</td></tr>
+    <tr><td>Resume PDF access</td><td>Short-TTL signed URL (≥60 min). Fetched by background worker only.</td><td>✅</td></tr>
+    <tr><td>LLM API key</td><td>Never present in extension. All LLM calls proxied through WisOwl backend.</td><td>✅</td></tr>
+    <tr><td>No third-party credentials</td><td>Extension never stores usernames or passwords for career portals.</td><td>✅</td></tr>
+    <tr><td>externally_connectable</td><td>Restricted to <code>https://app.wisowl.com/*</code>. All other origins rejected.</td><td>✅</td></tr>
+    <tr><td>Content script isolation</td><td>Content scripts run in isolated world. Page JS cannot access extension storage.</td><td>✅</td></tr>
+    <tr><td>Profile data exposure</td><td>Profile passed to content scripts per job only. Not embedded in bundle.</td><td>✅</td></tr>
+    <tr><td>CSP</td><td><code>script-src 'self'; object-src 'self'</code></td><td>✅</td></tr>
+    <tr><td>Session single-device lock</td><td>Backend must reject concurrent sessions for same user_id.</td><td>⚠️ Backend</td></tr>
+    <tr><td>Input sanitization</td><td>Popup uses <code>escapeHtml()</code> before DOM insertion.</td><td>✅</td></tr>
+  </table>
+</div>
+
+<!-- ==================== 09 ==================== -->
+<div class="page" id="s9">
+  <h2>09 · Phase 1 Limitations (Out of Scope)</h2>
+  <table>
+    <tr><th>Feature</th><th>Phase</th><th>Behavior in P1</th></tr>
+    <tr><td>Scheduled / automatic runs</td><td>P2</td><td>User must trigger manually. Requires open browser.</td></tr>
+    <tr><td>Login-required portals (Workday, SAP)</td><td>P2</td><td>Log <code>needs_review</code>. Skip job.</td></tr>
+    <tr><td>Cross-origin iFrames</td><td>P2</td><td>Log <code>IFRAME_BLOCKED</code>. Skip job.</td></tr>
+    <tr><td>Invisible CAPTCHAs (reCAPTCHA v3, Turnstile)</td><td>P2</td><td>Undetectable. May log <code>SUBMIT_UNCONFIRMED</code>.</td></tr>
+    <tr><td>LinkedIn Easy Apply</td><td>P2</td><td>Skip. Separate module needed.</td></tr>
+    <tr><td>Naukri / Indeed portal flows</td><td>P2</td><td>Skip. Portal-specific module.</td></tr>
+    <tr><td>Account creation on ATSs</td><td>OUT</td><td>Skip and log <code>needs_review</code>.</td></tr>
+    <tr><td>Video introduction uploads</td><td>OUT</td><td>Skip silently.</td></tr>
+    <tr><td>Mobile (Android Chrome)</td><td>OUT</td><td>Chrome extensions are desktop-only.</td></tr>
+  </table>
+
+  <h3>Success Criteria (P1 Target)</h3>
+  <table>
+    <tr><th>Metric</th><th>Target</th></tr>
+    <tr><td>Field detection rate</td><td>≥ 90% of visible fields</td></tr>
+    <tr><td>Field fill rate (deterministic)</td><td>≥ 95% of mapped fields</td></tr>
+    <tr><td>Resume upload success</td><td>≥ 80% across scenarios</td></tr>
+    <tr><td>Form submission confirmation</td><td>≥ 70% confirmed</td></tr>
+    <tr><td>Session completion (25 jobs)</td><td>No unhandled errors</td></tr>
+  </table>
+</div>
+
+<!-- ==================== 10 ==================== -->
+<div class="page" id="s10">
+  <h2>10 · Build &amp; Distribution</h2>
+
+  <h3>Development Build</h3>
+  <pre>npm run dev</pre>
+  <p>Watch mode with HMR for popup UI. Background worker changes require manual reload in <code>chrome://extensions</code>.</p>
+
+  <h3>Production Build</h3>
+  <pre>npm run build</pre>
+  <p>Outputs minified bundles to <code>dist/</code>:</p>
+  <ul>
+    <li><code>background.js</code> — ES module service worker</li>
+    <li><code>content/form-agent.js</code> — IIFE bundle for <code>chrome.scripting.executeScript</code></li>
+    <li><code>popup/</code> — HTML + CSS + JS for the popup UI</li>
+  </ul>
+
+  <h3>Chrome Web Store Submission</h3>
+  <ol>
+    <li>Create developer account at <a href="https://chrome.google.com/webstore/devconsole">Chrome Web Store Developer Dashboard</a></li>
+    <li>Pay one-time $5 registration fee</li>
+    <li>Zip the <code>dist/</code> folder</li>
+    <li>Upload with:
+      <ul>
+        <li>Store listing description (≤ 1000 chars)</li>
+        <li>Screenshots of popup views (1280×800 or 640×400 recommended)</li>
+        <li>Privacy policy URL (required for <code>&lt;all_urls&gt;</code>)</li>
+        <li>Justification for broad host permission</li>
+      </ul>
+    </li>
+    <li>Review takes 1–2 business days for new extensions</li>
+  </ol>
+
+  <h3>Developer Mode Distribution (Beta)</h3>
+  <p>For internal beta testing without CWS review:</p>
+  <ol>
+    <li>Build with <code>npm run build</code></li>
+    <li>Share the <code>dist/</code> folder (or zip it)</li>
+    <li>Users load it as unpacked in <code>chrome://extensions</code></li>
+    <li><strong>Warning:</strong> Unpacked extensions show a persistent "Developer mode" banner</li>
+  </ol>
+</div>
+
+<!-- ==================== 11 ==================== -->
+<div class="page" id="s11">
+  <h2>11 · Troubleshooting</h2>
+
+  <h3>Popup shows "Connect to WisOwl" forever</h3>
+  <ul>
+    <li>Check that the web app origin matches <code>externally_connectable.matches</code> in manifest</li>
+    <li>Verify the Extension ID in the web app matches the installed extension</li>
+    <li>Open background service worker console (chrome://extensions → click "service worker" link) and check for <code>[Auth]</code> logs</li>
+  </ul>
+
+  <h3>Session starts but no tabs open</h3>
+  <ul>
+    <li>Check background console for API errors (401 = expired JWT, 5xx = backend down)</li>
+    <li>Verify <code>apiBaseUrl</code> in <code>lib/config.ts</code> is correct and reachable</li>
+    <li>Ensure job queue is not empty (all jobs may have <code>already_applied: true</code>)</li>
+  </ul>
+
+  <h3>Fields not detected on a specific site</h3>
+  <ul>
+    <li>Open DevTools on the career page → Console</li>
+    <li>Check if fields are inside cross-origin iFrames (P2 limitation)</li>
+    <li>Check if fields are rendered by React/Angular with delayed hydration (increase <code>maxDomWaitMs</code> in config)</li>
+    <li>File an issue with the URL and a DOM snapshot</li>
+  </ul>
+
+  <h3>Resume upload fails</h3>
+  <ul>
+    <li>Check background console for <code>FILE_FETCH_FAIL</code> — signed URL may be expired</li>
+    <li>Verify resume PDF is accessible from the signed URL in a normal browser tab</li>
+    <li>Check if the form uses drag-and-drop only (Scenario C) — detection may need tuning</li>
+  </ul>
+
+  <h3>Service worker restarts mid-session</h3>
+  <ul>
+    <li>This is expected MV3 behavior. The extension is designed to resume automatically.</li>
+    <li>Check <code>chrome.storage.local</code> for <code>wisowl:is_running</code> flag</li>
+    <li>Verify keepalive alarm is firing (check <code>chrome.alarms</code> in background console)</li>
+  </ul>
+
+  <div class="callout">
+    <div class="callout-title">Support</div>
+    For bugs, feature requests, or integration help, refer to the PRD (<code>wisowl-autoapply-prd-final.html</code>) or the <code>BUILD_PLAN.md</code> in the repository.
+  </div>
+</div>
+
+<!-- ==================== FOOTER ==================== -->
+<div class="page" style="text-align:center; padding-top:40vh; color:#9ca3af;">
+  <p style="font-size:11px;">WisOwl Technologies Pvt. Ltd. · Auto-Apply Chrome Extension</p>
+  <p style="font-size:10px;">Internal Use Only · May 2025</p>
+</div>
+
+</body>
+</html>

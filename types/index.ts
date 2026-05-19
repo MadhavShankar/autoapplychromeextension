@@ -332,6 +332,8 @@ export type ATSKey =
   | 'keka'
   | 'freshteam'
   | 'successfactors'
+  | 'linkedin'
+  | 'naukri_indeed'
   | 'generic';
 
 export interface ATSStrategy {

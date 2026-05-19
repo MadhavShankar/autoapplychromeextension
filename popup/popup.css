@@ -200,6 +200,41 @@ body {
   margin: 12px 0;
 }
 
+/* ── Supported Platforms ── */
+.supported-platforms {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.platforms-title {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+  text-align: center;
+}
+.platforms-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+.platform-tag {
+  display: inline-block;
+  padding: 3px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+.platform-tag.p2 {
+  border-color: var(--border-hi);
+  color: var(--text);
+  background: var(--surface-2);
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }

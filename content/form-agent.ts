@@ -9,6 +9,14 @@ import { resumeUploader } from './resume-uploader.js';
 import { dynamicWatcher } from './dynamic-watcher.js';
 import { submitHandler } from './submit-handler.js';
 import { captchaDetector } from './captcha-detector.js';
+import {
+  initIframeBridge,
+  isInsideIframe,
+  hasCrossOriginIframes,
+  reportFieldsToParent,
+  getAggregatedIframeFields,
+  sendFillToFrame,
+} from './iframe-bridge.js';
 import { logger } from '../lib/logger.js';
 import { config } from '../lib/config.js';
 import type {
@@ -17,6 +25,7 @@ import type {
   ApplicationRecord,
   FieldMapping,
   ErrorCode,
+  DetectedField,
 } from '../types/index.js';
 
 // ═══════════════════════════════════════════════════════════════
@@ -67,6 +76,18 @@ export async function runFormAgent(job: JobQueueItem, profile: UserProfile): Pro
     await waitForDomReady(config.maxDomWaitMs);
     await randomDelay(300, 800);
 
+    // Initialize iFrame bridge (no-op if not in relevant context)
+    initIframeBridge();
+
+    // If we are inside an iframe, report fields to parent and stop
+    if (isInsideIframe()) {
+      const iframeFields = fieldDetector.detect(document);
+      reportFieldsToParent(iframeFields);
+      logger.info('FormAgent', 'Running inside iframe, reported fields to parent');
+      // Child frames do not process jobs independently
+      return finalize(record, startTime);
+    }
+
     // 2. Detect ATS and load strategy
     const atsResult = detectATS(window.location.href, document);
     context.atsKey = atsResult;
@@ -79,14 +100,43 @@ export async function runFormAgent(job: JobQueueItem, profile: UserProfile): Pro
       await strategy.beforeFill();
     }
 
-    // 3. Pre-fill CAPTCHA check
+    // 3. LinkedIn Easy Apply — click the button to open modal
+    if (atsResult === 'linkedin') {
+      const easyApplyBtn = findLinkedInEasyApplyButton(document);
+      if (easyApplyBtn) {
+        logger.info('FormAgent', 'Clicking LinkedIn Easy Apply button');
+        easyApplyBtn.click();
+        await randomDelay(1500, 2500);
+        // Wait for modal to appear
+        let attempts = 0;
+        while (!document.querySelector('.jobs-easy-apply-modal, [role="dialog"]') && attempts < 10) {
+          await randomDelay(500, 800);
+          attempts++;
+        }
+        if (!document.querySelector('.jobs-easy-apply-modal, [role="dialog"]')) {
+          logger.warn('FormAgent', 'LinkedIn Easy Apply modal did not open');
+          record.status = 'needs_review';
+          record.fail_reason = 'NO_FORM';
+          record.fail_detail = 'LinkedIn Easy Apply modal did not open';
+          return finalize(record, startTime);
+        }
+      } else {
+        logger.warn('FormAgent', 'LinkedIn Easy Apply button not found');
+        record.status = 'needs_review';
+        record.fail_reason = 'NO_FORM';
+        record.fail_detail = 'Easy Apply button not found on page';
+        return finalize(record, startTime);
+      }
+    }
+
+    // 4. Pre-fill CAPTCHA check
     if (captchaDetector.isPresent(document)) {
       logger.warn('FormAgent', 'CAPTCHA detected before fill');
       await chrome.runtime.sendMessage({ type: 'PAUSE_SESSION' });
       return record;
     }
 
-    // 4. Login / registration wall detection
+    // 5. Login / registration wall detection
     if (detectLoginWall(document)) {
       logger.warn('FormAgent', 'Login wall detected');
       record.status = 'needs_review';
@@ -95,22 +145,22 @@ export async function runFormAgent(job: JobQueueItem, profile: UserProfile): Pro
       return finalize(record, startTime);
     }
 
-    // 5. Parse-from-resume check
+    // 6. Parse-from-resume check
     const hasResumeUploadFirst = detectParseFromResumePortal(document);
     if (hasResumeUploadFirst) {
       logger.info('FormAgent', 'Parse-from-resume portal detected');
       const uploadResult = await resumeUploader.upload(profile, document);
       if (!uploadResult.success) {
         record.status = 'needs_review';
-        record.fail_reason = uploadResult.reason as ErrorCode;
-        record.fail_detail = uploadResult.detail;
+      record.fail_reason = uploadResult.reason as ErrorCode;
+      record.fail_detail = uploadResult.detail ?? null;
         record.needs_review_reasons.push('resume upload');
         return finalize(record, startTime);
       }
       await randomDelay(3000, 3500); // wait for autofill
     }
 
-    // 6. Main filling loop
+    // 7. Main filling loop
     let pageCount = 0;
     while (pageCount < config.maxPagesPerForm) {
       const pageResult = await processPage(context, strategy);
@@ -157,13 +207,40 @@ async function processPage(
   context: FormAgentContext,
   strategy: ReturnType<typeof getStrategy>
 ): Promise<{ hasNext: boolean }> {
-  const fields = strategy.detectFields
+  let fields = strategy.detectFields
     ? strategy.detectFields(document)
     : fieldDetector.detect(document);
 
+  // ── iFrame field aggregation ──
+  const iframeReports = getAggregatedIframeFields();
+  let iframeFields: DetectedField[] = [];
+  for (const report of iframeReports) {
+    for (const f of report.fields) {
+      iframeFields.push({
+        ...f,
+        selector: `iframe::${report.frameId}::${f.selector}`,
+        type: f.type as import('../types/index.js').FieldType,
+      });
+    }
+  }
+
+  if (iframeFields.length > 0) {
+    logger.debug('FormAgent', `Aggregated ${iframeFields.length} fields from ${iframeReports.length} iframes`);
+    fields = fields.concat(iframeFields);
+  }
+
   const unprocessed = fields.filter((f) => !context.processedSelectors.has(f.selector));
 
-  if (unprocessed.length === 0) {
+  if (unprocessed.length === 0 && iframeReports.length === 0) {
+    return { hasNext: false };
+  }
+
+  // If we only have iframe fields and they are cross-origin blocked
+  if (unprocessed.length === 0 && hasCrossOriginIframes() && iframeReports.length === 0) {
+    logger.warn('FormAgent', 'Cross-origin iFrames detected but fields could not be accessed');
+    context.record.status = 'needs_review';
+    context.record.fail_reason = 'IFRAME_BLOCKED';
+    context.record.fail_detail = 'Form fields are inside cross-origin iFrames';
     return { hasNext: false };
   }
 
@@ -184,6 +261,29 @@ async function processPage(
     }
 
     context.processedSelectors.add(mapping.field.selector);
+
+    // ── iFrame field handling ──
+    const isIframeField = mapping.field.selector.startsWith('iframe::');
+    if (isIframeField) {
+      const parts = mapping.field.selector.split('::');
+      const frameId = parts[1];
+      const innerSelector = parts[2];
+
+      if (mapping.value != null) {
+        sendFillToFrame(frameId, {
+          selector: innerSelector,
+          value: mapping.value,
+          fieldType: mapping.field.type,
+        });
+        context.record.fields_filled++;
+      } else if (mapping.field.required) {
+        context.record.fields_skipped++;
+        context.record.needs_review_reasons.push(mapping.field.label);
+      } else {
+        context.record.fields_skipped++;
+      }
+      continue;
+    }
 
     // Handle resume upload fields
     if (mapping.field.type === 'file') {
@@ -271,6 +371,30 @@ async function processPage(
   }
 
   return { hasNext: false };
+}
+
+function findLinkedInEasyApplyButton(doc: Document): HTMLElement | null {
+  const selectors = [
+    'button[aria-label*="Easy Apply"]',
+    'button:has-text("Easy Apply")',
+    'button.jobs-apply-button',
+    'button[data-control-name="jobdetails_topcard_inapply"]',
+  ];
+  for (const selector of selectors) {
+    try {
+      const btn = doc.querySelector(selector) as HTMLElement | null;
+      if (btn) return btn;
+    } catch {
+      // ignore unsupported selectors
+    }
+  }
+  // Fallback: any button containing "Easy Apply" text
+  const allButtons = doc.querySelectorAll('button');
+  for (const btn of Array.from(allButtons)) {
+    const text = (btn.textContent || '').trim().toLowerCase();
+    if (text.includes('easy apply')) return btn as HTMLElement;
+  }
+  return null;
 }
 
 function detectLoginWall(doc: Document): boolean {

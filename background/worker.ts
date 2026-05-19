@@ -79,14 +79,21 @@ async function addRecord(record: ApplicationRecord): Promise<void> {
 
 // ── External auth handoff ──
 
-listenForExternalMessages(async (message, sender) => {
+listenForExternalMessages(async (message, sender, sendResponse) => {
   const origin = sender.origin ?? '';
   if (!origin.startsWith('https://app.wisowl.com')) {
     logger.warn('Auth', 'Rejected external message from untrusted origin', { origin });
     return;
   }
 
-  const payload = message as AuthToken;
+  const payload = message as AuthToken & { type?: string };
+
+  // Handle PING from web app for extension detection
+  if (payload.type === 'PING') {
+    sendResponse({ ok: true, version: chrome.runtime.getManifest().version, ready: true });
+    return;
+  }
+
   if (payload.token && payload.user_id) {
     await storage.setAuthToken(payload);
     const state = await getState();
@@ -94,6 +101,7 @@ listenForExternalMessages(async (message, sender) => {
     state.session_id = '';
     await saveState(state);
     logger.info('Auth', 'Token received and stored');
+    sendResponse({ ok: true });
   }
 });
 
